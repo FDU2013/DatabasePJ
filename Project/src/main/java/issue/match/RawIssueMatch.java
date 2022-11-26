@@ -93,7 +93,7 @@ public class RawIssueMatch {
 
         //3. 进行映射
         // 前一个版本的缺陷 后一个版本的缺陷 当前版本的文件中所有方法及变量名
-        RawIssueMatcher.match(preRawIssueList, curRawIssueList, AstParserUtil.getMethodsAndFieldsInFile(baseRepoPath + SEPARATOR + "src/main/resources/testFile/commit2/test.java"));
+        RawIssueMatcher.match(preRawIssueList, curRawIssueList, AstParserUtil.getMethodsAndFieldsInFile(baseRepoPath + SEPARATOR + "src/main/resources/testFile/commit2/MatchFailed2.java"));
 
         System.out.println("preRawIssue1:matches " + preRawIssue1.getMappedRawIssue().getUuid());
         System.out.println("preRawIssue2:matches " + preRawIssue2.getMappedRawIssue().getUuid());
