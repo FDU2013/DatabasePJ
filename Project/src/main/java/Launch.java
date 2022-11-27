@@ -15,10 +15,28 @@ public class Launch {
     //private static final String URL_BASE = "src/main/resources/";
     private static final String URL_BASE = "";
     //数据库连接对象
-    private static Connection connection;
+    public static Connection connection;
 
     public static void main(String[] args) throws ClassNotFoundException {
-        //0.输入数据库信息
+
+        try{
+            //和数据库建立连接
+            connectToMySQL();
+        } catch (Exception e){
+            System.out.println("fail in connetToMySQL()");
+            return;
+        }
+        //创建数据表
+        createTable();
+        InterAct.InterActWithUserCommand();
+
+    }
+
+    public static Connection getConnection(){
+        return connection;
+    }
+
+    private static void connectToMySQL() throws Exception {
         Scanner s = new Scanner(System.in);
         //1.注册驱动
         Class.forName(DRIVER_NAME);
@@ -36,25 +54,24 @@ public class Launch {
             connection = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
         } catch (Exception e){
             System.out.println("connect to database fail!");
-            return;
+            throw new Exception();
         }
         if(connection!=null){
             System.out.println("succ connect!");
         } else{
             System.out.println("fail connect!");
-            return;
+            throw new Exception();
         }
-        //3创建数据表
+    }
+
+    private static void createTable(){
         try{
             runSqlByReadFileContent(URL_BASE+"sqlfile/create_table.sql", "UTF-8");
             System.out.println("create table successfully!");
         } catch (Exception e){
             System.out.println("create table fail!");
-            return;
         }
-
     }
-
 
 
 
