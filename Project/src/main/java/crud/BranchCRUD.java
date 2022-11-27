@@ -3,7 +3,7 @@ package crud;
 import entity.Branch;
 
 public class BranchCRUD {
-    public static void insertBranch(Branch branch){
-
+    public static Integer insertBranch(Branch branch)throws Exception{
+        return 0;
     }
 }
