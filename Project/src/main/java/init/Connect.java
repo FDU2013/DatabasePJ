@@ -1,4 +1,4 @@
-package connect;
+package init;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,7 +13,7 @@ public class Connect {
         return connection;
     }
 
-    private static void connectToMySQL() throws Exception {
+    public static void connectToMySQL() throws Exception {
         Scanner s = new Scanner(System.in);
         //1.注册驱动
         Class.forName(DRIVER_NAME);
