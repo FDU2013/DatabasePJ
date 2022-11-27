@@ -13,4 +13,5 @@ public class IssueInstance {
     Integer issue_case_id;
     Integer commit_id;
     INSTANCE_STATUS instance_status;
+    String file_path;
 }
