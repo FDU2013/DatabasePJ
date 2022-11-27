@@ -12,4 +12,10 @@ public class IssueLocation {
     Integer sequence;
     Integer start_line;
     Integer end_line;
+
+    public IssueLocation(Integer sequence, Integer startLine, Integer endLine){
+        this.sequence = sequence;
+        this.start_line = startLine;
+        this.end_line = endLine;
+    }
 }
