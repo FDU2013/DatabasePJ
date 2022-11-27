@@ -50,7 +50,7 @@ public class IssueUtil {
         return JSONObject.parseObject(result.toString());
     }
 
-    private boolean getSonarResult(String repoUuid, String commit, String repoPath) throws IOException {
+    private boolean getSonarResult(String repoUuid, String commit) throws IOException {
         //获取issue数量
         try {
             JSONArray sonarRawIssues = getSonarIssueResults(repoUuid + "_" + commit).getJSONArray("issues");
@@ -58,28 +58,14 @@ public class IssueUtil {
             //解析sonar的issues为平台的rawIssue
             for (int j = 0; j < sonarRawIssues.size(); j++) {
                 JSONObject sonarIssue = sonarRawIssues.getJSONObject(j);
-                String filePath = null;
-                String sonarPath = sonarIssue.getString("component");
-                if (sonarPath != null) {
-                    String[] sonarComponents = sonarPath.split(":");
-                    if (sonarComponents.length >= 2) {
-                        filePath = sonarComponents[sonarComponents.length - 1];
-                    }
-                }
-
                 //解析location
-                List<Location> locations = getLocations(sonarIssue, repoPath);
+                List<Location> locations = getLocations(sonarIssue);
                 if (locations.isEmpty()) {
                     continue;
                 }
                 //解析rawIssue
-
-                RawIssue rawIssue = getRawIssue(repoUuid, commit, getType(), sonarIssue, repoPath);
-                locations.forEach(location -> location.setFilePath(rawIssue.getFileName()));
+                RawIssue rawIssue = getRawIssue(repoUuid, commit, "", sonarIssue);
                 rawIssue.setLocations(locations);
-                String rawIssueUuid = RawIssue.generateRawIssueUUID(rawIssue);
-                rawIssue.setUuid(rawIssueUuid);
-                locations.forEach(location -> location.setRawIssueId(rawIssueUuid));
                 resultRawIssues.add(rawIssue);
             }
             return true;
@@ -89,15 +75,10 @@ public class IssueUtil {
         }
     }
 
-    public static List<Location> getLocations(JSONObject issue, String repoPath) throws Exception {
+    public static List<Location> getLocations(JSONObject issue) throws Exception {
         int startLine = 0;
         int endLine = 0;
-        String filePath = null;
-
-        String sonarPath;
-        String[] sonarComponents;
         List<Location> locations = new ArrayList<>();
-        int sequence = 1;
         JSONArray flows = issue.getJSONArray("flows");
         if (flows.size() == 0) {
             JSONObject textRange = issue.getJSONObject("textRange");
@@ -132,7 +113,6 @@ public class IssueUtil {
                     int flowStartLine = flowTextRange.getIntValue("startLine");
                     int flowEndLine = flowTextRange.getIntValue("endLine");
                     Location location = getLocation(flowStartLine, flowEndLine);
-                    sequence++;
                     locations.add(location);
                 }
             }
@@ -140,7 +120,7 @@ public class IssueUtil {
         return locations;
     }
 
-    static Location getLocation(int startLine, int endLine, String filePath){
+    static Location getLocation(int startLine, int endLine){
         Location location = new Location();
         location.setStartLine(startLine);
         location.setEndLine(endLine);
@@ -148,13 +128,21 @@ public class IssueUtil {
         return location;
     }
 
-    static RawIssue getRawIssue(String repoUuid, String commit, String type, String filePath){
+    static RawIssue getRawIssue(String repoUuid, String commit, String type, JSONObject issue){
         RawIssue rawIssue = new RawIssue();
         rawIssue.setUuid(repoUuid);
         rawIssue.setType(type);
+        String filePath = null;
+        String sonarPath = issue.getString("component");
+        if (sonarPath != null) {
+            String[] sonarComponents = sonarPath.split(":");
+            if (sonarComponents.length >= 2) {
+                filePath = sonarComponents[sonarComponents.length - 1];
+            }
+        }
         rawIssue.setFileName(filePath);
-        rawIssue.setDetail("Cast one of the operands of this multiplication operation to a \"long\".---MINOR");
-        rawIssue.setCommitId("commit1");
+        rawIssue.setDetail(issue.getString("message"));
+        rawIssue.setCommitId(commit);
         return rawIssue;
     }
 }
