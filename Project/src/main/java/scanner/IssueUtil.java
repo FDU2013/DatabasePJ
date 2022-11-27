@@ -58,13 +58,22 @@ public class IssueUtil {
             //解析sonar的issues为平台的rawIssue
             for (int j = 0; j < sonarRawIssues.size(); j++) {
                 JSONObject sonarIssue = sonarRawIssues.getJSONObject(j);
+                String filePath = null;
+                String sonarPath = sonarIssue.getString("component");
+                if (sonarPath != null) {
+                    String[] sonarComponents = sonarPath.split(":");
+                    if (sonarComponents.length >= 2) {
+                        filePath = sonarComponents[sonarComponents.length - 1];
+                    }
+                }
 
                 //解析location
-                List<IssueLocation> locations = getLocations(sonarIssue, repoPath);
+                List<Location> locations = getLocations(sonarIssue, repoPath);
                 if (locations.isEmpty()) {
                     continue;
                 }
                 //解析rawIssue
+
                 RawIssue rawIssue = getRawIssue(repoUuid, commit, getType(), sonarIssue, repoPath);
                 locations.forEach(location -> location.setFilePath(rawIssue.getFileName()));
                 rawIssue.setLocations(locations);
@@ -80,14 +89,14 @@ public class IssueUtil {
         }
     }
 
-    public static List<IssueLocation> getLocations(JSONObject issue, String repoPath) throws Exception {
+    public static List<Location> getLocations(JSONObject issue, String repoPath) throws Exception {
         int startLine = 0;
         int endLine = 0;
         String filePath = null;
 
         String sonarPath;
         String[] sonarComponents;
-        List<IssueLocation> locations = new ArrayList<>();
+        List<Location> locations = new ArrayList<>();
         int sequence = 1;
         JSONArray flows = issue.getJSONArray("flows");
         if (flows.size() == 0) {
@@ -105,7 +114,7 @@ public class IssueUtil {
 //                    filePath = sonarComponents[sonarComponents.length - 1];
 //                }
 //            }
-            IssueLocation mainLocation = new IssueLocation(sequence, startLine, endLine);
+            Location mainLocation = getLocation(startLine, endLine);
             locations.add(mainLocation);
         }
         else {
@@ -122,7 +131,7 @@ public class IssueUtil {
                     }
                     int flowStartLine = flowTextRange.getIntValue("startLine");
                     int flowEndLine = flowTextRange.getIntValue("endLine");
-                    IssueLocation location = new IssueLocation(sequence, flowStartLine, flowEndLine);
+                    Location location = getLocation(flowStartLine, flowEndLine);
                     sequence++;
                     locations.add(location);
                 }
@@ -131,22 +140,21 @@ public class IssueUtil {
         return locations;
     }
 
-//    static Location getLocation(int startLine, int endLine, String filePath, String repoPath){
-//        Location location = new Location();
-//        location.setStartLine(startLine);
-//        location.setEndLine(endLine);
-//        location.setStartToken(0);
-//        location.setFilePath(filePath);
-//        return location;
-//    }
-//
-//    static RawIssue getRawIssue(String repoUuid, String commit, String type, String repoPath){
-//        RawIssue rawIssue = new RawIssue();
-//        rawIssue.setUuid(repoUuid);
-//        rawIssue.setType(type);
-//        rawIssue.setFileName("src/main/resources/testFile/commit1/MatchFailed.java");
-//        rawIssue.setDetail("Cast one of the operands of this multiplication operation to a \"long\".---MINOR");
-//        rawIssue.setCommitId("commit1");
-//        return rawIssue;
-//    }
+    static Location getLocation(int startLine, int endLine, String filePath){
+        Location location = new Location();
+        location.setStartLine(startLine);
+        location.setEndLine(endLine);
+        location.setStartToken(0);
+        return location;
+    }
+
+    static RawIssue getRawIssue(String repoUuid, String commit, String type, String filePath){
+        RawIssue rawIssue = new RawIssue();
+        rawIssue.setUuid(repoUuid);
+        rawIssue.setType(type);
+        rawIssue.setFileName(filePath);
+        rawIssue.setDetail("Cast one of the operands of this multiplication operation to a \"long\".---MINOR");
+        rawIssue.setCommitId("commit1");
+        return rawIssue;
+    }
 }
