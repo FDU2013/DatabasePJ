@@ -21,7 +21,11 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/issue-1.0.0-jar-with-dependencies.jar</systemPath>
         </dependency>
-
+        <dependency>
+         <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+           <version>1.2.9</version>
+        </dependency>
     </dependencies>
 
 
