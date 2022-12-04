@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.sql.Timestamp;
 
 @Data
 @AllArgsConstructor
@@ -13,6 +13,6 @@ public class GitCommit {
     Integer branch_id;
     Integer commit_id;
     String hash_val;
-    Date commit_time;
+    Timestamp commit_time;
     String committer;
 }

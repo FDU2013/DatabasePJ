@@ -1,15 +1,7 @@
 import init.Connect;
 import init.CreateTable;
 
-import java.io.*;
-import java.nio.charset.Charset;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+
 
 public class Launch {
 
