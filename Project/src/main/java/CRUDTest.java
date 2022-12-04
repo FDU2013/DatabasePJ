@@ -1,23 +1,21 @@
 import common.CASE_TYPE;
-import crud.BranchCRUD;
-import crud.GitCommitCRUD;
-import crud.IssueCaseCRUD;
-import crud.RepositoryCRUD;
-import entity.Branch;
-import entity.GitCommit;
-import entity.Repository;
+import common.INSTANCE_STATUS;
+import crud.*;
+import entity.*;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
 public class CRUDTest {
     public static void allTest(){
-//        RepositoryTest();
-//        BranchTest();
-//        CommitTest1();
-//        CommitTest2();
-//        CaseTest1();
+        RepositoryTest();
+        BranchTest();
+        CommitTest1();
+        CommitTest2();
+        CaseTest1();
         CaseTest2();
+        InstanceTest();
+        LocationTest();
     }
 
     public static void RepositoryTest(){
@@ -89,8 +87,43 @@ public class CRUDTest {
 
     public static void CaseTest2(){
         try {
-            IssueCaseCRUD.SolveIssueCase(1, 2);
+            IssueCaseCRUD.solveIssueCase(1, 2);
             System.out.println("update issue_case1 succ");
+        }catch (Exception e){
+            System.out.println("fail");
+            e.printStackTrace();
+        }
+    }
+
+    public static void InstanceTest(){
+        try {
+            IssueInstance issueInstance = new IssueInstance(null,1,1, INSTANCE_STATUS.APPEAR,"C:/","This is a smell");
+            Integer id = IssueInstanceCRUD.insertIssueInstance(issueInstance);
+            System.out.println(id.toString());
+            System.out.println("insert issue_instance1 succ");
+
+            issueInstance.setInstance_status(INSTANCE_STATUS.DISAPPEAR);
+            issueInstance.setCommit_id(2);
+            id = IssueInstanceCRUD.insertIssueInstance(issueInstance);
+            System.out.println(id.toString());
+            System.out.println("insert issue_instance2 succ");
+        }catch (Exception e){
+            System.out.println("fail");
+            e.printStackTrace();
+        }
+    }
+
+    public static void LocationTest(){
+        try {
+            IssueLocation issueLocation1 = new IssueLocation(1,1,1,2);
+            IssueLocationCRUD.insertIssueLocation(issueLocation1);
+            System.out.println("insert issue_location1 succ");
+
+            IssueLocation issueLocation2 = new IssueLocation(1,2,5,6);
+            IssueLocationCRUD.insertIssueLocation(issueLocation2);
+            System.out.println("insert issue_location2 succ");
+
+
         }catch (Exception e){
             System.out.println("fail");
             e.printStackTrace();

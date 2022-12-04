@@ -28,7 +28,7 @@ public class IssueCaseCRUD {
         throw new Exception();
     }
 
-    public static void SolveIssueCase(Integer issue_case_id, Integer solve_commit_id) throws Exception {
+    public static void solveIssueCase(Integer issue_case_id, Integer solve_commit_id) throws Exception {
         Connection connection = Connect.getConnection();
         String sql = "update issue_case set solve_commit_id=?, solve_time=?, solve_committer=?, case_status=? where issue_case_id=?";
         PreparedStatement ps = connection.prepareStatement(sql);

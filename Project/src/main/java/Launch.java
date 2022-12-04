@@ -17,7 +17,7 @@ public class Launch {
         //创建数据表
         CreateTable.createTable();
 
-        CRUDTest.allTest();
+        //CRUDTest.allTest();
 
         InterAct.InterActWithUserCommand();
 
