@@ -1,6 +1,7 @@
 package crud;
 
 import common.EnumUtil;
+import entity.IssueCase;
 import entity.IssueInstance;
 import init.Connect;
 
@@ -8,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.List;
 
 public class IssueInstanceCRUD {
     public static Integer insertIssueInstance(IssueInstance issueInstance) throws Exception{
@@ -26,5 +28,7 @@ public class IssueInstanceCRUD {
         }
         throw new Exception();
     }
+
+
 
 }

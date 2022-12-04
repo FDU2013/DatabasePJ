@@ -7,6 +7,8 @@ import entity.IssueCase;
 import init.Connect;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IssueCaseCRUD {
     //插入一个新的issue的时候，只需要说明appear_commit_id和type即可，solve的信息以后补全，至于time和committer，这里会自己补全
@@ -43,5 +45,41 @@ public class IssueCaseCRUD {
         if(rs==0){
             throw new Exception();
         }
+    }
+
+    public static List<IssueCase> getAllIssueCaseFromResult(ResultSet rs) throws Exception {
+        List<IssueCase> list = new ArrayList<>();
+        while(rs.next()){
+            IssueCase issueCase = new IssueCase(
+                    rs.getInt("issue_case_id"),
+                    rs.getInt("appear_commit_id"),
+                    rs.getInt("solve_commit_id"),
+                    EnumUtil.String2CaseStatus(rs.getString("case_status")),
+                    EnumUtil.String2CaseType(rs.getString("type")),
+                    rs.getTimestamp("appear_time"),
+                    rs.getString("appear_committer"),
+                    rs.getTimestamp("solve_time"),
+                    rs.getString("solve_committer"));
+            list.add(issueCase);
+        }
+        return list;
+    }
+
+    public static List<IssueCase> getAppearIssueCaseByCommit(GitCommit gitCommit) throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select * from issue_case where appear_commit_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,gitCommit.getCommit_id());
+        ResultSet rs = ps.executeQuery();
+        return getAllIssueCaseFromResult(rs);
+    }
+
+    public static List<IssueCase> getSolvedIssueCaseByCommit(GitCommit gitCommit) throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select * from issue_case where solve_commit_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,gitCommit.getCommit_id());
+        ResultSet rs = ps.executeQuery();
+        return getAllIssueCaseFromResult(rs);
     }
 }

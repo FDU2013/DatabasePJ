@@ -1,9 +1,12 @@
 package crud;
 
 import entity.GitCommit;
+import entity.IssueCase;
+import entity.IssueInstance;
 import init.Connect;
 
 import java.sql.*;
+import java.util.List;
 
 public class GitCommitCRUD {
     public static Integer insertGitCommit(GitCommit gitCommit)throws Exception{
@@ -22,13 +25,7 @@ public class GitCommitCRUD {
         throw new Exception();
     }
 
-    public static GitCommit selectGitCommitByCommitId(Integer commit_id) throws Exception {
-        Connection connection = Connect.getConnection();
-        String sql = "select * from git_commit where commit_id=?";
-        PreparedStatement ps = connection.prepareStatement(sql);
-        ps.setInt(1,commit_id);
-        ResultSet rs = ps.executeQuery();
-
+    public static GitCommit getFirstGitCommitFromResult(ResultSet rs) throws Exception {
         if(rs.next()){
             GitCommit gitCommit = new GitCommit(
                     rs.getInt("branch_id"),
@@ -40,6 +37,34 @@ public class GitCommitCRUD {
         }
         throw new Exception();
     }
+
+
+    public static GitCommit selectGitCommitByCommitId(Integer commit_id) throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select * from git_commit where commit_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,commit_id);
+        ResultSet rs = ps.executeQuery();
+        return getFirstGitCommitFromResult(rs);
+    }
+
+    public static GitCommit selectGitCommitByHashVal(String hash_val) throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select * from git_commit where hash_val=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setString(1,hash_val);
+        ResultSet rs = ps.executeQuery();
+        return getFirstGitCommitFromResult(rs);
+    }
+
+    public static GitCommit getLatestCommit() throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select * from git_commit,(select max(commit_time) AS max_time from git_commit )AS b WHERE git_commit.commit_time = b.max_time";
+        Statement statement = connection.createStatement();
+        ResultSet rs = statement.executeQuery(sql);
+        return getFirstGitCommitFromResult(rs);
+    }
+
 
 
 }
