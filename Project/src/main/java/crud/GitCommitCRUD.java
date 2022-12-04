@@ -6,6 +6,7 @@ import entity.IssueInstance;
 import init.Connect;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class GitCommitCRUD {
@@ -38,6 +39,22 @@ public class GitCommitCRUD {
         throw new Exception();
     }
 
+    public static List<GitCommit> getAllGitCommitFromResult(ResultSet rs) throws Exception {
+        List<GitCommit> list = new ArrayList<>();
+        while(rs.next()){
+            GitCommit gitCommit = new GitCommit(
+                    rs.getInt("branch_id"),
+                    rs.getInt("commit_id"),
+                    rs.getString("hash_val"),
+                    rs.getTimestamp("commit_time"),
+                    rs.getString("committer"));
+            list.add(gitCommit);
+        }
+        return list;
+    }
+
+//    private static List<Integer> getAllCommit
+
 
     public static GitCommit selectGitCommitByCommitId(Integer commit_id) throws Exception {
         Connection connection = Connect.getConnection();
@@ -67,4 +84,12 @@ public class GitCommitCRUD {
 
 
 
+    public static List<GitCommit> getAllCommitUntilOneCommit(GitCommit gitCommit) throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select * from git_commit where commit_time<=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setTimestamp(1,gitCommit.getCommit_time());
+        ResultSet rs = ps.executeQuery();
+        return getAllGitCommitFromResult(rs);
+    }
 }

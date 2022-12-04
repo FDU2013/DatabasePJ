@@ -1,22 +1,19 @@
-package entity;
+package common;
 
-import common.CASE_STATUS;
-import common.CASE_TYPE;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
-import java.util.Date;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
-public class IssueCase {
+public class ExtendedInstance {
+    Integer issue_instance_id;
     Integer issue_case_id;
-    Integer appear_commit_id;
-    Integer solve_commit_id;
-    CASE_STATUS case_status;
+    Integer commit_id;
+    INSTANCE_STATUS instance_status;
+    String file_path;
+    String message;
     CASE_TYPE type;
     Timestamp appear_time;
     String appear_committer;
