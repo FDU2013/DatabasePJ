@@ -1,5 +1,7 @@
+import common.CASE_TYPE;
 import crud.BranchCRUD;
 import crud.GitCommitCRUD;
+import crud.IssueCaseCRUD;
 import crud.RepositoryCRUD;
 import entity.Branch;
 import entity.GitCommit;
@@ -14,6 +16,8 @@ public class CRUDTest {
 //        BranchTest();
 //        CommitTest1();
 //        CommitTest2();
+//        CaseTest1();
+        CaseTest2();
     }
 
     public static void RepositoryTest(){
@@ -66,6 +70,27 @@ public class CRUDTest {
             Integer id = GitCommitCRUD.insertGitCommit(gitCommit);
             System.out.println(id.toString());
             System.out.println("add commit2:fghijk succ");
+        }catch (Exception e){
+            System.out.println("fail");
+            e.printStackTrace();
+        }
+    }
+
+    public static void CaseTest1(){
+        try {
+            Integer id = IssueCaseCRUD.insertIssueCase(1, CASE_TYPE.SMELL);
+            System.out.println(id.toString());
+            System.out.println("add issue_case1 succ");
+        }catch (Exception e){
+            System.out.println("fail");
+            e.printStackTrace();
+        }
+    }
+
+    public static void CaseTest2(){
+        try {
+            IssueCaseCRUD.SolveIssueCase(1, 2);
+            System.out.println("update issue_case1 succ");
         }catch (Exception e){
             System.out.println("fail");
             e.printStackTrace();
