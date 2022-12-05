@@ -5,12 +5,14 @@ import common.TimeUtil;
 import crud.GitCommitCRUD;
 import crud.IssueCaseCRUD;
 import crud.IssueInstanceCRUD;
+import crud.IssueLocationCRUD;
 import entity.GitCommit;
 import entity.IssueCase;
-import entity.IssueInstance;
+import entity.IssueLocation;
 import sort.GitCommitTimeComparator;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -46,6 +48,7 @@ public class TimeService {
     }
 
     private static void Step2CalChange(List<GitCommit> commits) throws Exception {
+        Scanner s = new Scanner(System.in);
         TreeMap<Integer, ExtendedInstance> appear_map = new TreeMap<>();
         List<ExtendedInstance> solve_list = new ArrayList<>();
         Integer appear_and_solve=0;
@@ -82,7 +85,62 @@ public class TimeService {
         System.out.println("--这段时间解决的缺陷：");
         PrintSolvedIssueCaseInfoByTypeAndTotal(solve_list);
         if(appear>0)
-        System.out.printf("--这段时间内新引入缺陷的解决率：%.2f%%",appear_and_solve*1.0/appear);
+        System.out.printf("--这段时间内新引入缺陷的解决率：%.2f%%",appear_and_solve*100.0/appear);
+        System.out.println("--------------------");
+        System.out.println("查看更多具体信息？(y/n)");
+        switch (s.nextLine()){
+            case "y":
+                System.out.println("-------------------------");
+                System.out.println("--这段时间内新引入的缺陷的信息：");
+                PrintNewInstanceDetail(appear_list);
+                System.out.println("-------------------------");
+                System.out.println("--这段时间内消除的缺陷的信息：");
+                PrintSolvedInstanceDetail(solve_list);
+                break;
+            default:return;
+        }
+    }
+
+    private static void PrintNewInstanceDetail(List<ExtendedInstance> appear_list) {
+        CommitService.PrintExistingIssueByTypeOrderByTime(appear_list,false);
+    }
+
+    private static void PrintSolvedInstanceDetail(List<ExtendedInstance> solve_list) {
+        List<ExtendedInstance> bugs = new ArrayList<>();
+        List<ExtendedInstance> smells = new ArrayList<>();
+        List<ExtendedInstance> sechots = new ArrayList<>();
+        List<ExtendedInstance> vulns = new ArrayList<>();
+        for(ExtendedInstance instance: solve_list){
+            switch (instance.getType()){
+                case BUG:bugs.add(instance);break;
+                case SMELL:smells.add(instance);break;
+                case SECHOT:sechots.add(instance);break;
+                case VULN:vulns.add(instance);break;
+            }
+        }
+        System.out.println("------BUG------");
+        PrintSolvedInstanceByTime(bugs);
+        System.out.println("------SMELL------");
+        PrintSolvedInstanceByTime(smells);
+        System.out.println("------SECHOT------");
+        PrintSolvedInstanceByTime(sechots);
+        System.out.println("------VULN------");
+        PrintSolvedInstanceByTime(vulns);
+    }
+
+    private static void PrintSolvedInstanceByTime(List<ExtendedInstance> instances) {
+        if(instances.isEmpty()){
+            System.out.println("== 无 ==");
+            return;
+        }
+        System.out.println("缺陷ID--|------引入时间--------|-------解决时间--------|--持续时间--|-----------文件路径-----------");
+        for(ExtendedInstance instance:instances){
+            String appear_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(instance.getAppear_time());
+            String solve_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(instance.getSolve_time());
+            long diff = TimeUtil.getTimeDifference(instance.getSolve_time(),instance.getAppear_time());
+            System.out.printf("%-6d | %s | %s | %s | %s ",instance.getIssue_case_id(),appear_time,solve_time,TimeUtil.getTimeDifferenceString(diff),instance.getFile_path());
+            System.out.println("");
+        }
     }
 
     private static void PrintNewIssueCaseInfoByTypeAndTotal(List<ExtendedInstance> appear_list) throws Exception {
@@ -120,7 +178,7 @@ public class TimeService {
             }
         }
         Integer bugNum= bugs.size(), smellNum=smells.size(),sechotNum=sechots.size(),vulnNum=vulns.size();
-        //思考一下这里会不会有溢出的问题
+        //思考一下这里会不会有溢出的问题,使用包装过的数据类型
         Long bugs_time_cost=0L,smells_time_cost=0L,sechots_time_cost=0L,vuln_time_cost=0L;
         System.out.println("Bug    : "+bugNum);
         if(bugNum>0){

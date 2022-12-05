@@ -132,13 +132,13 @@ public class CommitService {
         }
         List<ExtendedInstance> existingInstances = new ArrayList<>(map.values());
         map.clear();
-        PrintExistingIssueByTypeOrderByTime(existingInstances);
+        PrintExistingIssueByTypeOrderByTime(existingInstances,true);
     }
 
 
 
 
-    private static void PrintExistingIssueByTypeOrderByTime(List<ExtendedInstance> existingInstances){
+    public static void PrintExistingIssueByTypeOrderByTime(List<ExtendedInstance> existingInstances,boolean show_time_diff_to_now){
         List<ExtendedInstance> bugs = new ArrayList<>();
         List<ExtendedInstance> smells = new ArrayList<>();
         List<ExtendedInstance> sechots = new ArrayList<>();
@@ -152,15 +152,15 @@ public class CommitService {
             }
         }
         System.out.println("------BUG------");
-        PrintInstanceByTime(bugs);
+        PrintInstanceByTime(bugs,show_time_diff_to_now);
         System.out.println("------SMELL------");
-        PrintInstanceByTime(smells);
+        PrintInstanceByTime(smells,show_time_diff_to_now);
         System.out.println("------SECHOT------");
-        PrintInstanceByTime(sechots);
+        PrintInstanceByTime(sechots,show_time_diff_to_now);
         System.out.println("------VULN------");
-        PrintInstanceByTime(vulns);
+        PrintInstanceByTime(vulns,show_time_diff_to_now);
     }
-    private static void PrintInstanceByTime(List<ExtendedInstance> list){
+    private static void PrintInstanceByTime(List<ExtendedInstance> list,boolean show_time_diff_to_now){
         if(list.isEmpty()){
             System.out.println("== 无 ==");
             return;
@@ -170,27 +170,40 @@ public class CommitService {
         long diffsum=0;
         long midtime;
         int size = list.size();
-        System.out.println("缺陷ID--|------引入时间--------|---存续时间---|-----------文件路径及行号-----------");
+        if(show_time_diff_to_now){
+            System.out.println("缺陷ID--|------引入时间--------|---存续时间---|-----------文件路径及行号-----------");
+        }else {
+            System.out.println("缺陷ID--|------引入时间--------|-----------文件路径-----------");
+        }
+
         for(ExtendedInstance instance:list){
             String appear_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(instance.getAppear_time());
-            long diff = TimeUtil.getTimeDifference(now_time,instance.getAppear_time());
-            diffsum+=diff;
-            System.out.printf("%-6d | %s | %s | %s  ",instance.getIssue_case_id(),appear_time,TimeUtil.getTimeDifferenceString(diff),instance.getFile_path());
-            try{
-                IssueLocation.PrintLocationList(IssueLocationCRUD.getLocationByInstanceId(instance.getLatest_instance_id()));
-            }catch (Exception e){
-                e.printStackTrace();
+            if(show_time_diff_to_now){
+                long diff = TimeUtil.getTimeDifference(now_time,instance.getAppear_time());
+                diffsum+=diff;
+                System.out.printf("%-6d | %s | %s | %s  ",instance.getIssue_case_id(),appear_time,TimeUtil.getTimeDifferenceString(diff),instance.getFile_path());
+                try{
+                    IssueLocation.PrintLocationList(IssueLocationCRUD.getLocationByInstanceId(instance.getLatest_instance_id()));
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }else {
+                System.out.printf("%-6d | %s | %s  ",instance.getIssue_case_id(),appear_time,instance.getFile_path());
             }
+
             System.out.println("");
         }
-        System.out.println("--平均存续时间  ："+TimeUtil.getTimeDifferenceString(diffsum/size));
-        if(size%2==0){
-            midtime = list.get(size/2).getAppear_time().getTime() + list.get(size/2-1).getAppear_time().getTime();
-            midtime/=2;
-        }else{
-            midtime = list.get(size/2).getAppear_time().getTime();
+        if(show_time_diff_to_now){
+            System.out.println("--平均存续时间  ："+TimeUtil.getTimeDifferenceString(diffsum/size));
+            if(size%2==0){
+                midtime = list.get(size/2).getAppear_time().getTime() + list.get(size/2-1).getAppear_time().getTime();
+                midtime/=2;
+            }else{
+                midtime = list.get(size/2).getAppear_time().getTime();
+            }
+            System.out.println("--存续时间中位数："+TimeUtil.getTimeDifferenceString(now_time.getTime()-midtime));
         }
-        System.out.println("--存续时间中位数："+TimeUtil.getTimeDifferenceString(now_time.getTime()-midtime));
+
     }
 
 
