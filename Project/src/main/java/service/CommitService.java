@@ -5,8 +5,10 @@ import common.TimeUtil;
 import crud.GitCommitCRUD;
 import crud.IssueCaseCRUD;
 import crud.IssueInstanceCRUD;
+import crud.IssueLocationCRUD;
 import entity.GitCommit;
 import entity.IssueCase;
+import entity.IssueLocation;
 import sort.ExtendedInstanceTimeComparator;
 import sort.GitCommitTimeComparator;
 
@@ -113,9 +115,12 @@ public class CommitService {
             for(ExtendedInstance instance:extendedInstances){
                 switch (instance.getInstance_status()){
                     case APPEAR:
+                        instance.setLatest_instance_id(instance.getIssue_instance_id());
                         map.put(instance.getIssue_case_id(),instance);
                         break;
-                    case UPDATE:break;
+                    case UPDATE:
+                        map.get(instance.getIssue_case_id()).setLatest_instance_id(instance.getIssue_instance_id());
+                        break;
                     case DISAPPEAR:
                         map.remove(instance.getIssue_case_id());
                         break;
@@ -125,10 +130,7 @@ public class CommitService {
                 }
             }
         }
-        List<ExtendedInstance> existingInstances = new ArrayList<>();
-        for(ExtendedInstance extendedInstance : map.values()){
-            existingInstances.add(extendedInstance);
-        }
+        List<ExtendedInstance> existingInstances = new ArrayList<>(map.values());
         map.clear();
         PrintExistingIssueByTypeOrderByTime(existingInstances);
     }
@@ -168,12 +170,18 @@ public class CommitService {
         long diffsum=0;
         long midtime;
         int size = list.size();
-        System.out.println("缺陷ID--|------引入时间--------|--存续时间");
+        System.out.println("缺陷ID--|------引入时间--------|---存续时间---|-----------文件路径及行号-----------");
         for(ExtendedInstance instance:list){
             String appear_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(instance.getAppear_time());
             long diff = TimeUtil.getTimeDifference(now_time,instance.getAppear_time());
             diffsum+=diff;
-            System.out.printf("%-6d | %s |  %s\n",instance.getIssue_case_id(),appear_time,TimeUtil.getTimeDifferenceString(diff));
+            System.out.printf("%-6d | %s | %s | %s  ",instance.getIssue_case_id(),appear_time,TimeUtil.getTimeDifferenceString(diff),instance.getFile_path());
+            try{
+                IssueLocation.PrintLocationList(IssueLocationCRUD.getLocationByInstanceId(instance.getLatest_instance_id()));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            System.out.println("");
         }
         System.out.println("--平均存续时间  ："+TimeUtil.getTimeDifferenceString(diffsum/size));
         if(size%2==0){

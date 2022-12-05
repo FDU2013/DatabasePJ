@@ -92,4 +92,14 @@ public class GitCommitCRUD {
         ResultSet rs = ps.executeQuery();
         return getAllGitCommitFromResult(rs);
     }
+
+    public static List<GitCommit> getAllCommitBetween(Timestamp start_time, Timestamp end_time) throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select * from git_commit where commit_time between ? and ?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setTimestamp(1,start_time);
+        ps.setTimestamp(2,end_time);
+        ResultSet rs = ps.executeQuery();
+        return getAllGitCommitFromResult(rs);
+    }
 }

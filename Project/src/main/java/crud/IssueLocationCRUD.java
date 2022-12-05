@@ -1,13 +1,13 @@
 package crud;
 
 import common.EnumUtil;
+import common.ExtendedInstance;
 import entity.IssueLocation;
 import init.Connect;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IssueLocationCRUD {
     public static void insertIssueLocation(IssueLocation location) throws Exception{
@@ -23,4 +23,27 @@ public class IssueLocationCRUD {
             throw new Exception();
         }
     }
+
+    private static List<IssueLocation> getAllLocationFromResult(ResultSet rs) throws Exception {
+        List<IssueLocation> list = new ArrayList<>();
+        while(rs.next()){
+            IssueLocation location = new IssueLocation(
+                    rs.getInt("issue_instance_id"),
+                    rs.getInt("sequence"),
+                    rs.getInt("start_line"),
+                    rs.getInt("end_line"));
+            list.add(location);
+        }
+        return list;
+    }
+
+    public static List<IssueLocation> getLocationByInstanceId(Integer issue_instance_id) throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select * from issue_location where issue_instance_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,issue_instance_id);
+        ResultSet rs = ps.executeQuery();
+        return getAllLocationFromResult(rs);
+    }
+
 }

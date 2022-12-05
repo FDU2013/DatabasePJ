@@ -19,4 +19,5 @@ public class ExtendedInstance {
     String appear_committer;
     Timestamp solve_time;
     String solve_committer;
+    Integer latest_instance_id;
 }

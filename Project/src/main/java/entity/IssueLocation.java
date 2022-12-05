@@ -3,6 +3,9 @@ package entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import sort.IssueLocationComparator;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -13,9 +16,10 @@ public class IssueLocation {
     Integer start_line;
     Integer end_line;
 
-    public IssueLocation(Integer sequence, Integer startLine, Integer endLine){
-        this.sequence = sequence;
-        this.start_line = startLine;
-        this.end_line = endLine;
+    public static void PrintLocationList(List<IssueLocation> locations){
+        locations.sort(new IssueLocationComparator());
+        for (IssueLocation location:locations){
+            System.out.printf("[%d,%d] ",location.getStart_line(),location.getEnd_line());
+        }
     }
 }

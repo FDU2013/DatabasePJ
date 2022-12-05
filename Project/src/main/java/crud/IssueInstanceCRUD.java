@@ -41,7 +41,8 @@ public class IssueInstanceCRUD {
                     rs.getTimestamp("appear_time"),
                     rs.getString("appear_committer"),
                     rs.getTimestamp("solve_time"),
-                    rs.getString("solve_committer"));
+                    rs.getString("solve_committer"),
+                    null);
             list.add(extendedInstance);
         }
         return list;

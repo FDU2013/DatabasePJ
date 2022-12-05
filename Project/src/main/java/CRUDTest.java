@@ -52,6 +52,15 @@ public class CRUDTest {
             Integer id = GitCommitCRUD.insertGitCommit(gitCommit);
             System.out.println(id.toString());
             System.out.println("add commit1:abcde succ");
+
+            date = "2022-01-015 00:00:01";
+            timeStamp=new Timestamp(
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(date).getTime());
+            gitCommit = new GitCommit(1,0,"bcd",timeStamp,"zjx");
+
+            id = GitCommitCRUD.insertGitCommit(gitCommit);
+            System.out.println(id.toString());
+            System.out.println("add commit2:abcde succ");
         }catch (Exception e){
             System.out.println("fail");
             e.printStackTrace();
@@ -67,7 +76,7 @@ public class CRUDTest {
 
             Integer id = GitCommitCRUD.insertGitCommit(gitCommit);
             System.out.println(id.toString());
-            System.out.println("add commit2:fghijk succ");
+            System.out.println("add commit3:fghijk succ");
         }catch (Exception e){
             System.out.println("fail");
             e.printStackTrace();
@@ -79,6 +88,11 @@ public class CRUDTest {
             Integer id = IssueCaseCRUD.insertIssueCase(1, CASE_TYPE.SMELL);
             System.out.println(id.toString());
             System.out.println("add issue_case1 succ");
+            IssueCaseCRUD.insertIssueCase(1, CASE_TYPE.SMELL);
+            IssueCaseCRUD.insertIssueCase(1, CASE_TYPE.SMELL);
+            IssueCaseCRUD.insertIssueCase(1, CASE_TYPE.BUG);
+            IssueCaseCRUD.insertIssueCase(2, CASE_TYPE.SMELL);
+            IssueCaseCRUD.insertIssueCase(2, CASE_TYPE.BUG);
         }catch (Exception e){
             System.out.println("fail");
             e.printStackTrace();
@@ -87,7 +101,9 @@ public class CRUDTest {
 
     public static void CaseTest2(){
         try {
-            IssueCaseCRUD.solveIssueCase(1, 2);
+            IssueCaseCRUD.solveIssueCase(1, 3);
+            IssueCaseCRUD.solveIssueCase(2, 3);
+            IssueCaseCRUD.solveIssueCase(4, 3);
             System.out.println("update issue_case1 succ");
         }catch (Exception e){
             System.out.println("fail");
@@ -102,11 +118,40 @@ public class CRUDTest {
             System.out.println(id.toString());
             System.out.println("insert issue_instance1 succ");
 
-            issueInstance.setInstance_status(INSTANCE_STATUS.DISAPPEAR);
-            issueInstance.setCommit_id(2);
+            issueInstance.setIssue_case_id(2);
             id = IssueInstanceCRUD.insertIssueInstance(issueInstance);
             System.out.println(id.toString());
-            System.out.println("insert issue_instance2 succ");
+
+            issueInstance.setIssue_case_id(3);
+            id = IssueInstanceCRUD.insertIssueInstance(issueInstance);
+            System.out.println(id.toString());
+
+            issueInstance.setIssue_case_id(4);
+            issueInstance.setMessage("This a bug");
+            id = IssueInstanceCRUD.insertIssueInstance(issueInstance);
+            System.out.println(id.toString());
+
+            issueInstance.setIssue_case_id(5);
+            issueInstance.setCommit_id(2);
+            issueInstance.setMessage("a smell in commit2");
+            id = IssueInstanceCRUD.insertIssueInstance(issueInstance);
+            System.out.println(id.toString());
+
+            issueInstance.setIssue_case_id(6);
+            issueInstance.setCommit_id(2);
+            issueInstance.setMessage("This a bug");
+            id = IssueInstanceCRUD.insertIssueInstance(issueInstance);
+            System.out.println(id.toString());
+
+            issueInstance.setIssue_case_id(1);
+            issueInstance.setInstance_status(INSTANCE_STATUS.DISAPPEAR);
+            issueInstance.setCommit_id(3);
+            IssueInstanceCRUD.insertIssueInstance(issueInstance);
+
+            issueInstance.setIssue_case_id(2);
+            IssueInstanceCRUD.insertIssueInstance(issueInstance);
+            issueInstance.setIssue_case_id(4);
+            IssueInstanceCRUD.insertIssueInstance(issueInstance);
         }catch (Exception e){
             System.out.println("fail");
             e.printStackTrace();

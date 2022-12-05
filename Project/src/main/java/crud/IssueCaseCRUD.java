@@ -82,4 +82,15 @@ public class IssueCaseCRUD {
         ResultSet rs = ps.executeQuery();
         return getAllIssueCaseFromResult(rs);
     }
+
+    public static IssueCase getIssueCaseByInstanceID(Integer issue_case_id) throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select * from issue_case where issue_case_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,issue_case_id);
+        ResultSet rs = ps.executeQuery();
+        List<IssueCase> cases = getAllIssueCaseFromResult(rs);
+        if(cases.size()==0)throw new Exception();
+        return cases.get(0);
+    }
 }
