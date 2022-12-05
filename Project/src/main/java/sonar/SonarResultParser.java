@@ -1,10 +1,9 @@
-package scanner;
+package sonar;
 
 import cn.edu.fudan.issue.entity.dbo.Location;
 import cn.edu.fudan.issue.entity.dbo.RawIssue;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import entity.IssueLocation;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,13 +15,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class IssueUtil {
+public class SonarResultParser {
 
     private static final String SEARCH_API_URL = "http://127.0.0.1:9000/api/issues/search";
     private static final String AUTHORIZATION = "Basic YWRtaW46MTIzNDU=";
-    private List <RawIssue> resultRawIssues;
 
-    public JSONObject getSonarIssueResults(String id) throws IOException {
+    private List<RawIssue> resultRawIssues;
+
+    public List<RawIssue> getResultRawIssues() {
+        return resultRawIssues;
+    }
+
+
+    private JSONObject getSonarIssueResults(String id) throws IOException {
         URL url = new URL(SEARCH_API_URL + "?componentKeys=" + id + "&additionalFields=_all&s=FILE_LINE&resolved=false");
 
         URLConnection connection = url.openConnection();
@@ -50,7 +55,7 @@ public class IssueUtil {
         return JSONObject.parseObject(result.toString());
     }
 
-    private boolean getSonarResult(String repoUuid, String commit) throws IOException {
+    public boolean getSonarResult(String repoUuid, String commit) {
         //获取issue数量
         try {
             JSONArray sonarRawIssues = getSonarIssueResults(repoUuid + "_" + commit).getJSONArray("issues");
@@ -64,9 +69,9 @@ public class IssueUtil {
                     continue;
                 }
                 //解析rawIssue
-                RawIssue rawIssue = getRawIssue(repoUuid, commit, "", sonarIssue);
+                RawIssue rawIssue = getRawIssue(repoUuid, commit, "", sonarIssue, j);
                 rawIssue.setLocations(locations);
-                resultRawIssues.add(rawIssue);
+                this.resultRawIssues.add(rawIssue);
             }
             return true;
         } catch (Exception e) {
@@ -75,7 +80,7 @@ public class IssueUtil {
         }
     }
 
-    public static List<Location> getLocations(JSONObject issue) throws Exception {
+    private static List<Location> getLocations(JSONObject issue) throws Exception {
         int startLine = 0;
         int endLine = 0;
         List<Location> locations = new ArrayList<>();
@@ -120,7 +125,7 @@ public class IssueUtil {
         return locations;
     }
 
-    static Location getLocation(int startLine, int endLine){
+    public static Location getLocation(int startLine, int endLine){
         Location location = new Location();
         location.setStartLine(startLine);
         location.setEndLine(endLine);
@@ -128,9 +133,9 @@ public class IssueUtil {
         return location;
     }
 
-    static RawIssue getRawIssue(String repoUuid, String commit, String type, JSONObject issue){
+    public static RawIssue getRawIssue(String repoUuid, String commit, String type, JSONObject issue, Integer index){
         RawIssue rawIssue = new RawIssue();
-        rawIssue.setUuid(repoUuid);
+        rawIssue.setUuid(repoUuid + "_" + index.toString());
         rawIssue.setType(type);
         String filePath = null;
         String sonarPath = issue.getString("component");
