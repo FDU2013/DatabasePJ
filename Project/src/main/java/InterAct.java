@@ -1,6 +1,7 @@
 import init.BranchView;
 import service.CommitService;
 import service.CommitterService;
+import service.ImportService;
 import service.TimeService;
 
 import java.util.Scanner;
@@ -31,6 +32,9 @@ public class InterAct {
                 case "exit":
                     exitFlag = true;
                     break;
+                case "import":
+                    ImportService.ImportServiceInterAct();
+                    break;
                 default:
                     System.out.println("错误的指令，输入help查看所有指令\n\n");
             }
@@ -44,6 +48,7 @@ public class InterAct {
         System.out.println("--time   查看指定时间段");
         System.out.println("--committer 查看指定程序员");
         System.out.println("--checkout  切换仓库/分支");
+        System.out.println("--import    导入代码仓库");
         System.out.println("--exit 退出");
     }
 
