@@ -7,6 +7,7 @@ import crud.IssueCaseCRUD;
 import crud.IssueInstanceCRUD;
 import entity.GitCommit;
 import entity.IssueCase;
+import init.BranchView;
 import sort.GitCommitTimeComparator;
 
 import java.sql.Timestamp;
@@ -20,6 +21,7 @@ public class TimeService {
     private static Timestamp start_time, end_time;
 
     public static void timeInterAct() {
+        if(!BranchView.isValid())return;
         try {
             Step1DecideTime();
             List<GitCommit> commits = GitCommitCRUD.getAllCommitBetween(start_time,end_time);

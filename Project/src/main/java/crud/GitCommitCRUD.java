@@ -59,9 +59,11 @@ public class GitCommitCRUD {
 
     public static GitCommit selectGitCommitByCommitId(Integer commit_id) throws Exception {
         Connection connection = Connect.getConnection();
-        String sql = "select * from git_commit where commit_id=?";
+        Integer branch_id = BranchView.getCurrentBranch();
+        String sql = "select * from git_commit where commit_id=? and branch_id=?";
         PreparedStatement ps = connection.prepareStatement(sql);
         ps.setInt(1,commit_id);
+        ps.setInt(2,branch_id);
         ResultSet rs = ps.executeQuery();
         return getFirstGitCommitFromResult(rs);
     }
@@ -69,6 +71,7 @@ public class GitCommitCRUD {
     public static GitCommit selectGitCommitByHashVal(String hash_val) throws Exception {
         Connection connection = Connect.getConnection();
         Integer branch_id = BranchView.getCurrentBranch();
+
         String sql = "select * from git_commit where hash_val=? and branch_id=?";
         PreparedStatement ps = connection.prepareStatement(sql);
         ps.setString(1,hash_val);

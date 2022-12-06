@@ -66,14 +66,14 @@ public class BranchView {
         Branch branch;
         branch = BranchCRUD.getBranchByName(branch_name);
 
-        current_branch_id = branch.getRepository_id();
+        current_branch_id = branch.getBranch_id();
         branch.print();
     }
 
     public static void checkout(Integer branch_id) throws Exception {
         Branch branch;
         branch = BranchCRUD.getBranchByID(branch_id);
-        current_branch_id = branch.getRepository_id();
+        current_branch_id = branch.getBranch_id();
         branch.print();
     }
 

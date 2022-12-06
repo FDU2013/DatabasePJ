@@ -41,7 +41,7 @@ public class CommitService {
                 try{
                     gitCommit = GitCommitCRUD.getLatestCommit();
                 } catch (Exception e){
-                    e.printStackTrace();
+                    //e.printStackTrace();
                     System.out.println("获取最新commit失败");
                     return;
                 }
@@ -65,7 +65,7 @@ public class CommitService {
                             return;
                     }
                 } catch (Exception e){
-                    e.printStackTrace();
+                    //e.printStackTrace();
                     System.out.println("获取对应commit失败");
                     return;
                 }

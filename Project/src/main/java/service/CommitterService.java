@@ -3,8 +3,8 @@ package service;
 import common.ExtendedInstance;
 import common.TimeUtil;
 import crud.IssueCaseCRUD;
-import crud.IssueInstanceCRUD;
 import entity.IssueCase;
+import init.BranchView;
 import sort.SolvedCaseExistingTimeComparator;
 import sort.UnsolvedCaseLivingTimeComparator;
 
@@ -18,6 +18,7 @@ import java.util.Scanner;
 public class CommitterService {
     private static String committer;
     public static void committerInterAct() {
+        if(!BranchView.isValid())return;
         Step1DecideName();
         try {
             System.out.println("---------------------");
