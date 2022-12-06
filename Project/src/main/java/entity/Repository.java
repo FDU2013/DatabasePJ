@@ -12,4 +12,10 @@ public class Repository {
     String name;
     String description;
     String url;
+
+    public void print(){
+        System.out.println("仓库名："+this.name);
+        System.out.println("描述："+this.description);
+        System.out.println("url："+this.url);
+    }
 }

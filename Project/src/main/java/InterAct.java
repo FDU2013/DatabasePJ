@@ -1,3 +1,4 @@
+import init.BranchView;
 import service.CommitService;
 import service.CommitterService;
 import service.TimeService;
@@ -24,6 +25,9 @@ public class InterAct {
                 case "committer":
                     CommitterService.committerInterAct();
                     break;
+                case "checkout":
+                    BranchView.ChooseBranch();
+                    break;
                 case "exit":
                     exitFlag = true;
                     break;
@@ -39,6 +43,7 @@ public class InterAct {
         System.out.println("--commit 查看指定版本");
         System.out.println("--time   查看指定时间段");
         System.out.println("--committer 查看指定程序员");
+        System.out.println("--checkout  切换仓库/分支");
         System.out.println("--exit 退出");
     }
 

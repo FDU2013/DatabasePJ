@@ -12,4 +12,9 @@ public class Branch {
     Integer repository_id;
     String name;
     String description;
+
+    public void print(){
+        System.out.println("分支名："+this.name);
+        System.out.println("描述："+this.description);
+    }
 }

@@ -3,6 +3,7 @@ package crud;
 import entity.GitCommit;
 import entity.IssueCase;
 import entity.IssueInstance;
+import init.BranchView;
 import init.Connect;
 
 import java.sql.*;
@@ -67,18 +68,23 @@ public class GitCommitCRUD {
 
     public static GitCommit selectGitCommitByHashVal(String hash_val) throws Exception {
         Connection connection = Connect.getConnection();
-        String sql = "select * from git_commit where hash_val=?";
+        Integer branch_id = BranchView.getCurrentBranch();
+        String sql = "select * from git_commit where hash_val=? and branch_id=?";
         PreparedStatement ps = connection.prepareStatement(sql);
         ps.setString(1,hash_val);
+        ps.setInt(2,branch_id);
         ResultSet rs = ps.executeQuery();
         return getFirstGitCommitFromResult(rs);
     }
 
     public static GitCommit getLatestCommit() throws Exception {
         Connection connection = Connect.getConnection();
-        String sql = "select * from git_commit,(select max(commit_time) AS max_time from git_commit )AS b WHERE git_commit.commit_time = b.max_time";
-        Statement statement = connection.createStatement();
-        ResultSet rs = statement.executeQuery(sql);
+        Integer branch_id = BranchView.getCurrentBranch();
+        String sql = "select * from git_commit,(select max(commit_time) AS max_time from git_commit where branch_id=?)AS b WHERE git_commit.commit_time = b.max_time and branch_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,branch_id);
+        ps.setInt(2,branch_id);
+        ResultSet rs = ps.executeQuery();
         return getFirstGitCommitFromResult(rs);
     }
 
@@ -86,19 +92,23 @@ public class GitCommitCRUD {
 
     public static List<GitCommit> getAllCommitUntilOneCommit(GitCommit gitCommit) throws Exception {
         Connection connection = Connect.getConnection();
-        String sql = "select * from git_commit where commit_time<=?";
+        Integer branch_id = BranchView.getCurrentBranch();
+        String sql = "select * from git_commit where commit_time<=? and branch_id=?";
         PreparedStatement ps = connection.prepareStatement(sql);
         ps.setTimestamp(1,gitCommit.getCommit_time());
+        ps.setInt(2,branch_id);
         ResultSet rs = ps.executeQuery();
         return getAllGitCommitFromResult(rs);
     }
 
     public static List<GitCommit> getAllCommitBetween(Timestamp start_time, Timestamp end_time) throws Exception {
         Connection connection = Connect.getConnection();
-        String sql = "select * from git_commit where commit_time between ? and ?";
+        Integer branch_id = BranchView.getCurrentBranch();
+        String sql = "select * from git_commit where branch_id=? and commit_time between ? and ?";
         PreparedStatement ps = connection.prepareStatement(sql);
-        ps.setTimestamp(1,start_time);
-        ps.setTimestamp(2,end_time);
+        ps.setInt(1,branch_id);
+        ps.setTimestamp(2,start_time);
+        ps.setTimestamp(3,end_time);
         ResultSet rs = ps.executeQuery();
         return getAllGitCommitFromResult(rs);
     }

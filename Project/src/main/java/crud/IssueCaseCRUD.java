@@ -2,8 +2,10 @@ package crud;
 
 import common.CASE_TYPE;
 import common.EnumUtil;
+import common.ExtendedInstance;
 import entity.GitCommit;
 import entity.IssueCase;
+import init.BranchView;
 import init.Connect;
 
 import java.sql.*;
@@ -92,5 +94,82 @@ public class IssueCaseCRUD {
         List<IssueCase> cases = getAllIssueCaseFromResult(rs);
         if(cases.size()==0)throw new Exception();
         return cases.get(0);
+    }
+
+    public static List<IssueCase> getSelfProducedAndSelfSolvedIssueCaseByCommitter(String committer) throws Exception {
+        Connection connection = Connect.getConnection();
+        Integer branch_id = BranchView.getCurrentBranch();
+        String sql = "select * from issue_case where appear_committer=? and solve_committer=? and case_status='SOLVED' and appear_commit_id in (select commit_id from git_commit where branch_id=?)";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setString(1,committer);
+        ps.setString(2,committer);
+        ps.setInt(3,branch_id);
+        ResultSet rs = ps.executeQuery();
+        return getAllIssueCaseFromResult(rs);
+    }
+
+    public static List<IssueCase> getSelfProducedAndOthersSolvedIssueCaseByCommitter(String committer) throws Exception {
+        Connection connection = Connect.getConnection();
+        Integer branch_id = BranchView.getCurrentBranch();
+        String sql = "select * from issue_case where appear_committer=? and solve_committer<>? and case_status='SOLVED' and appear_commit_id in (select commit_id from git_commit where branch_id=?)";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setString(1,committer);
+        ps.setString(2,committer);
+        ps.setInt(3,branch_id);
+        ResultSet rs = ps.executeQuery();
+        return getAllIssueCaseFromResult(rs);
+    }
+
+    public static List<IssueCase> getOthersProducedAndSelfSolvedIssueCaseByCommitter(String committer) throws Exception {
+        Connection connection = Connect.getConnection();
+        Integer branch_id = BranchView.getCurrentBranch();
+        String sql = "select * from issue_case where appear_committer<>? and solve_committer=? and case_status='SOLVED' and appear_commit_id in (select commit_id from git_commit where branch_id=?)";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setString(1,committer);
+        ps.setString(2,committer);
+        ps.setInt(3,branch_id);
+        ResultSet rs = ps.executeQuery();
+        return getAllIssueCaseFromResult(rs);
+    }
+
+    public static List<IssueCase> getSelfProducedAndNotSolvedIssueCaseByCommitter(String committer) throws Exception {
+        Connection connection = Connect.getConnection();
+        Integer branch_id = BranchView.getCurrentBranch();
+        String sql = "select * from issue_case where appear_committer=? and case_status='UNSOLVED' and appear_commit_id in (select commit_id from git_commit where branch_id=?)";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setString(1,committer);
+        ps.setInt(2,branch_id);
+        ResultSet rs = ps.executeQuery();
+        return getAllIssueCaseFromResult(rs);
+    }
+
+    private static ExtendedInstance getFirstExtendedInstanceFromResult(ResultSet rs) throws Exception {
+        List<ExtendedInstance> list = new ArrayList<>();
+        if(rs.next()){
+            ExtendedInstance extendedInstance = new ExtendedInstance(
+                    rs.getInt("issue_instance_id"),
+                    rs.getInt("issue_case_id"),
+                    rs.getInt("commit_id"),
+                    EnumUtil.String2InstanceStatus(rs.getString("instance_status")),
+                    rs.getString("file_path"),
+                    rs.getString("message"),
+                    EnumUtil.String2CaseType(rs.getString("type")),
+                    rs.getTimestamp("appear_time"),
+                    rs.getString("appear_committer"),
+                    rs.getTimestamp("solve_time"),
+                    rs.getString("solve_committer"),
+                    null);
+            return extendedInstance;
+        }
+        throw new Exception();
+    }
+
+    public static ExtendedInstance getExtendedInstanceByCaseId(Integer issue_case_id) throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select * from issue_case join issue_instance using(issue_case_id) where issue_case_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,issue_case_id);
+        ResultSet rs = ps.executeQuery();
+        return getFirstExtendedInstanceFromResult(rs);
     }
 }

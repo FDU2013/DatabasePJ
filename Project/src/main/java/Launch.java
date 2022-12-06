@@ -1,3 +1,4 @@
+import init.BranchView;
 import init.Connect;
 import init.CreateTable;
 
@@ -16,6 +17,7 @@ public class Launch {
         }
         //创建数据表
         CreateTable.createTable();
+        BranchView.BranchViewInit();
 
         //CRUDTest.allTest();
 

@@ -9,6 +9,7 @@ import crud.IssueLocationCRUD;
 import entity.GitCommit;
 import entity.IssueCase;
 import entity.IssueLocation;
+import init.BranchView;
 import sort.ExtendedInstanceTimeComparator;
 import sort.GitCommitTimeComparator;
 
@@ -22,6 +23,7 @@ import java.util.TreeMap;
 public class CommitService {
     private static GitCommit gitCommit;
     public static void commitInterAct(){
+        if(!BranchView.isValid())return;
         System.out.println("---------------------");
         System.out.println("--latest 查看最新版本的累积/增量");
         System.out.println("--choose 查看指定版本的累积/增量");

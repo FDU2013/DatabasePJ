@@ -5,10 +5,8 @@ import common.TimeUtil;
 import crud.GitCommitCRUD;
 import crud.IssueCaseCRUD;
 import crud.IssueInstanceCRUD;
-import crud.IssueLocationCRUD;
 import entity.GitCommit;
 import entity.IssueCase;
-import entity.IssueLocation;
 import sort.GitCommitTimeComparator;
 
 import java.sql.Timestamp;

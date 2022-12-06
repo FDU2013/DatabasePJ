@@ -1,6 +1,8 @@
 package crud;
 
 import entity.Branch;
+import entity.GitCommit;
+import init.BranchView;
 import init.Connect;
 
 import java.sql.Connection;
@@ -22,5 +24,40 @@ public class BranchCRUD {
             return rs.getInt(1);
         }
         throw new Exception();
+    }
+
+    public static Branch getOnlyBranchFromResult(ResultSet rs) throws Exception {
+        if(rs.next()){
+            Branch branch = new Branch(
+                    rs.getInt("branch_id"),
+                    rs.getInt("repository_id"),
+                    rs.getString("name"),
+                    rs.getString("description"));
+            if(rs.next())throw new Exception();
+            return branch;
+        }
+        throw new Exception();
+    }
+
+    public static Branch getBranchByName(String name)throws Exception{
+        Connection connection = Connect.getConnection();
+        Integer repo_id = BranchView.getCurrentRepo();
+        String sql = "select * from branch where name=? and repository_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setString(1,name);
+        ps.setInt(2,repo_id);
+        ResultSet rs = ps.executeQuery();
+        return getOnlyBranchFromResult(rs);
+    }
+
+    public static Branch getBranchByID(Integer branch_id)throws Exception{
+        Connection connection = Connect.getConnection();
+        Integer repo_id = BranchView.getCurrentRepo();
+        String sql = "select * from branch where branch_id=? and repository_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,branch_id);
+        ps.setInt(2,repo_id);
+        ResultSet rs = ps.executeQuery();
+        return getOnlyBranchFromResult(rs);
     }
 }

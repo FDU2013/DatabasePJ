@@ -1,5 +1,10 @@
 package init;
 
+import crud.BranchCRUD;
+import crud.RepositoryCRUD;
+import entity.Branch;
+import entity.Repository;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Scanner;
@@ -7,11 +12,13 @@ import java.util.Scanner;
 public class Connect {
 
     public static Connection connection;
+
     //mysql驱动包名
     private static final String DRIVER_NAME = "com.mysql.cj.jdbc.Driver";
     public static Connection getConnection(){
         return connection;
     }
+
 
     public static void connectToMySQL() throws Exception {
         Scanner s = new Scanner(System.in);
@@ -43,4 +50,6 @@ public class Connect {
             throw new Exception();
         }
     }
+
+
 }

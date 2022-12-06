@@ -1,5 +1,6 @@
 package crud;
 
+import entity.Branch;
 import init.Connect;
 import entity.Repository;
 
@@ -22,5 +23,36 @@ public class RepositoryCRUD {
             return rs.getInt(1);
         }
         throw new Exception();
+    }
+
+    public static Repository getOnlyRepositoryFromResult(ResultSet rs) throws Exception {
+        if(rs.next()){
+            Repository repo = new Repository(
+                    rs.getInt("repository_id"),
+                    rs.getString("name"),
+                    rs.getString("description"),
+                    rs.getString("url"));
+            if(rs.next())throw new Exception();
+            return repo;
+        }
+        throw new Exception();
+    }
+
+    public static Repository getRepositoryByName(String name)throws Exception{
+        Connection connection = Connect.getConnection();
+        String sql = "select * from repository where name=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setString(1,name);
+        ResultSet rs = ps.executeQuery();
+        return getOnlyRepositoryFromResult(rs);
+    }
+
+    public static Repository getRepositoryByID(Integer repo_id)throws Exception{
+        Connection connection = Connect.getConnection();
+        String sql = "select * from repository where repository_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,repo_id);
+        ResultSet rs = ps.executeQuery();
+        return getOnlyRepositoryFromResult(rs);
     }
 }
