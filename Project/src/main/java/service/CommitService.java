@@ -161,6 +161,29 @@ public class CommitService {
         PrintInstanceByTime(sechots,show_time_diff_to_now);
         System.out.println("------VULN------");
         PrintInstanceByTime(vulns,show_time_diff_to_now);
+
+        if(show_time_diff_to_now){
+            Scanner s = new Scanner(System.in);
+            Integer days,hours;
+            System.out.println("是否筛选存续时长较久的缺陷？(y/n)");
+            if("y".equals(s.nextLine())){
+                System.out.println("请输入持续天数");
+                days = Integer.parseInt(s.nextLine());
+                System.out.println("请再输入小时");
+                hours = Integer.parseInt(s.nextLine());
+            }else return;
+            Long diff_limit = (hours+ 24L *days)*(1000*60*60L);
+            System.out.println("------BUG------");
+            PrintLivingTimeGreaterThan(bugs,diff_limit);
+            System.out.println("------SMELL------");
+            PrintLivingTimeGreaterThan(smells,diff_limit);
+            System.out.println("------SECHOT------");
+            PrintLivingTimeGreaterThan(sechots,diff_limit);
+            System.out.println("------VULN------");
+            PrintLivingTimeGreaterThan(vulns,diff_limit);
+        }
+
+
     }
     private static void PrintInstanceByTime(List<ExtendedInstance> list,boolean show_time_diff_to_now){
         if(list.isEmpty()){
@@ -173,9 +196,9 @@ public class CommitService {
         long midtime;
         int size = list.size();
         if(show_time_diff_to_now){
-            System.out.println("缺陷ID--|------引入时间--------|---存续时间---|-----------文件路径及行号-----------");
+            System.out.println("缺陷ID--|------引入时间--------|---引入者---|---存续时间---|-----------文件路径及行号-----------");
         }else {
-            System.out.println("缺陷ID--|------引入时间--------|-----------文件路径-----------");
+            System.out.println("缺陷ID--|------引入时间--------|---引入者---|-----------文件路径-----------");
         }
 
         for(ExtendedInstance instance:list){
@@ -183,14 +206,14 @@ public class CommitService {
             if(show_time_diff_to_now){
                 long diff = TimeUtil.getTimeDifference(now_time,instance.getAppear_time());
                 diffsum+=diff;
-                System.out.printf("%-6d | %s | %s | %s  ",instance.getIssue_case_id(),appear_time,TimeUtil.getTimeDifferenceString(diff),instance.getFile_path());
+                System.out.printf("%-6d | %s | %-9s | %s | %s  ",instance.getIssue_case_id(),appear_time,instance.getAppear_committer(),TimeUtil.getTimeDifferenceString(diff),instance.getFile_path());
                 try{
                     IssueLocation.PrintLocationList(IssueLocationCRUD.getLocationByInstanceId(instance.getLatest_instance_id()));
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             }else {
-                System.out.printf("%-6d | %s | %s  ",instance.getIssue_case_id(),appear_time,instance.getFile_path());
+                System.out.printf("%-6d | %s | %-9s | %s  ",instance.getIssue_case_id(),appear_time,instance.getAppear_committer(),instance.getFile_path());
             }
 
             System.out.println("");
@@ -205,7 +228,24 @@ public class CommitService {
             }
             System.out.println("--存续时间中位数："+TimeUtil.getTimeDifferenceString(now_time.getTime()-midtime));
         }
+    }
 
+    private static void PrintLivingTimeGreaterThan(List<ExtendedInstance> list,Long diff_limit) {
+
+        Timestamp now_time = new Timestamp(System.currentTimeMillis());
+        System.out.println("缺陷ID--|------引入时间--------|---引入者---|---存续时间---|-----------文件路径及行号-----------");
+        for(ExtendedInstance instance:list){
+            String appear_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(instance.getAppear_time());
+            long diff = TimeUtil.getTimeDifference(now_time,instance.getAppear_time());
+            if(diff<diff_limit)continue;
+            System.out.printf("%-6d | %s | %-9s | %s | %s  ",instance.getIssue_case_id(),appear_time,instance.getAppear_committer(),TimeUtil.getTimeDifferenceString(diff),instance.getFile_path());
+            try{
+                IssueLocation.PrintLocationList(IssueLocationCRUD.getLocationByInstanceId(instance.getLatest_instance_id()));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            System.out.println("");
+        }
     }
 
 
