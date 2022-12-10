@@ -15,7 +15,12 @@ public class RepositoryCRUD {
         String sql = "insert into repository(name,description,url) values(?,?,?)";
         PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
         ps.setString(1,repository.getName());
-        ps.setString(2,repository.getDescription());
+        if(repository.getDescription()==null){
+            ps.setString(2,"null");
+        }else {
+            ps.setString(2,repository.getDescription());
+        }
+
         ps.setString(3,repository.getUrl());
         ps.execute();
         ResultSet rs = ps.getGeneratedKeys();

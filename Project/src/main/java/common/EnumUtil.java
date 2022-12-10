@@ -37,6 +37,16 @@ public class EnumUtil {
         }
     }
 
+    public static CASE_TYPE SonarString2CaseType(String s){
+        switch (s){
+            case "BUG":return CASE_TYPE.BUG;
+            case "VULNERABILITY":return CASE_TYPE.VULN;
+            case "CODE_SMELL":return CASE_TYPE.SMELL;
+            //case "SECHOT": return CASE_TYPE.SECHOT;
+            default: return null;
+        }
+    }
+
     public static CASE_STATUS String2CaseStatus(String s){
         switch (s){
             case "SOLVED":return CASE_STATUS.SOLVED;

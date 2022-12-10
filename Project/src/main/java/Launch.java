@@ -12,6 +12,7 @@ public class Launch {
             //和数据库建立连接
             Connect.connectToMySQL();
         } catch (Exception e){
+            e.printStackTrace();
             System.out.println("fail in connetToMySQL()");
             return;
         }

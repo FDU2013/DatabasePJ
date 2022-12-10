@@ -81,24 +81,41 @@ public class RawIssueMatch {
         curRawIssue2.setDetail("Cast one of the operands of this multiplication operation to a \"long\".---MINOR");
         curRawIssue2.setCommitId("commit2");
         Location curLocation2 = new Location();
-        curLocation2.setStartLine(11);
-        curLocation2.setEndLine(11);
+        curLocation2.setStartLine(12);
+        curLocation2.setEndLine(12);
         curLocation2.setStartToken(0);
         curRawIssue2.setLocations(Collections.singletonList(curLocation2));
 
         curRawIssueList.add(curRawIssue1);
         curRawIssueList.add(curRawIssue2);
+        RawIssue curRawIssue3= new RawIssue();
+        curRawIssue3.setUuid("curRawIssue3");
+        curRawIssue3.setType(type);
+        curRawIssue3.setFileName("src/main/resources/testFile/commit2/MatchFailed2.java");
+        curRawIssue3.setDetail("Cast one of the operands of this multiplication operation to a \"long\".---MINOR");
+        curRawIssue3.setCommitId("commit2");
+        Location curLocation3 = new Location();
+        curLocation3.setStartLine(11);
+        curLocation3.setEndLine(11);
+        curLocation3.setStartToken(0);
+        curRawIssue3.setLocations(Collections.singletonList(curLocation3));
+        curRawIssueList.add(curRawIssue3);
 
         AnalyzerUtil.addExtraAttributeInRawIssues(curRawIssueList, baseRepoPath);
 
         //3. 进行映射
         // 前一个版本的缺陷 后一个版本的缺陷 当前版本的文件中所有方法及变量名
         RawIssueMatcher.match(preRawIssueList, curRawIssueList, AstParserUtil.getMethodsAndFieldsInFile(baseRepoPath + SEPARATOR + "src/main/resources/testFile/commit2/MatchFailed2.java"));
-
-        System.out.println("preRawIssue1:matches " + preRawIssue1.getMappedRawIssue().getUuid());
-        System.out.println("preRawIssue2:matches " + preRawIssue2.getMappedRawIssue().getUuid());
-        System.out.println("curRawIssue1:matches " + curRawIssue1.getMappedRawIssue().getUuid());
-        System.out.println("curRawIssue2:matches " + curRawIssue2.getMappedRawIssue().getUuid());
+        System.out.println(curRawIssueList.size());
+        if(preRawIssueList.get(0).isMapped())
+        System.out.println("preRawIssue1:matches " + preRawIssueList.get(0).getMappedRawIssue().getUuid());
+        if(preRawIssueList.get(1).isMapped())
+        System.out.println("preRawIssue2:matches " + preRawIssueList.get(1).getMappedRawIssue().getUuid());
+        if(curRawIssueList.get(0).isMapped())
+        System.out.println("curRawIssue1:matches " + curRawIssueList.get(0).getMappedRawIssue().getUuid());
+        if(curRawIssueList.get(1).isMapped())
+        System.out.println("curRawIssue2:matches " + curRawIssueList.get(1).getMappedRawIssue().getUuid());
+        //System.out.println("curRawIssue3:matches " + curRawIssueList.get(2).getMappedRawIssue().getUuid());
 
     }
 

@@ -1,15 +1,13 @@
 package sonar;
 
+import cn.edu.fudan.issue.entity.dbo.Location;
+import cn.edu.fudan.issue.entity.dbo.RawIssue;
 import common.CommitProperty;
-import crud.BranchCRUD;
-import crud.GitCommitCRUD;
-import crud.RepositoryCRUD;
-import entity.Branch;
-import entity.GitCommit;
-import entity.Repository;
+import common.INSTANCE_STATUS;
+import crud.*;
+import entity.*;
 import util.GitUtil;
 
-import javax.xml.crypto.Data;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,14 +15,21 @@ import java.util.HashMap;
 import java.util.List;
 
 import static common.CommitProperty.*;
+import static common.EnumUtil.SonarString2CaseType;
+import static common.EnumUtil.String2CaseType;
+import static common.INSTANCE_STATUS.*;
+
 
 public class RepoImport {
-    private String repoName;
-    private String path;
-    private GitUtil gitUtil;
+    private final String repoName;
+    private final String path;
+    private final GitUtil gitUtil;
     private Integer repositoryId;
+    private Integer curBranchId;
 
     public RepoImport(String repoName, String path){
+        assert repoName != null;
+        assert path != null;
         this.repoName = repoName;
         this.path = path;
         this.gitUtil = new GitUtil();
@@ -43,44 +48,139 @@ public class RepoImport {
     public void importAllBranch(){
         List<String> allBranch = gitUtil.getAllBranch();
         for(String branch : allBranch) {
-            importBranch(branch);
+            Integer id = importBranch(branch);
+            //TODO sds
+            if(branch.equals("refs/heads/master")) curBranchId = id;
         }
     }
 
-    public void importBranch(String name){
+    public Integer importBranch(String name){
+        Integer id = 0;
         Branch branch = new Branch(null, repositoryId, name, null);
         try {
-            BranchCRUD.insertBranch(branch);
+            id =BranchCRUD.insertBranch(branch);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return id;
     }
 
-    public void importAllCommitAndIssue(){
-        gitUtil.checkoutBranch("main");
+    public void importAllCommitAndIssue(String branchName) throws Exception {
+        List<String> allBranch = gitUtil.getAllBranch();
+        if(!allBranch.contains(branchName)) branchName = allBranch.get(0);
+        gitUtil.checkoutBranch(branchName);
         ArrayList<HashMap<CommitProperty, Object>> allCommit = gitUtil.getAllCommit();
-        for(int i = allCommit.size() - 1; i >= 0; i--){
-            HashMap<CommitProperty, Object> commit = allCommit.get(i);
-            Integer commitId = importCommit(commit);
+        GitCommit lastCommit = importCommit(allCommit.get(allCommit.size() - 1));
+        String bName = branchName.replaceAll("/", "-");
+        String sonarID = repoName + "_" + bName + "_" + lastCommit.getHash_val();
+        SonarScanner.ScanRepo(path, sonarID);
+        SonarResultParser parser = new SonarResultParser();
+        List<RawIssue> preRawIssues = new ArrayList<>();
+        List<IssueInstance> preIssuesInstance = new ArrayList<>();
+        if(parser.getSonarResult(repoName, bName, lastCommit.getHash_val())) {
+            preRawIssues = parser.getResultRawIssues();
+            for(RawIssue issue : preRawIssues){
+                Integer caseId = IssueCaseCRUD.insertIssueCase(lastCommit.getCommit_id(), SonarString2CaseType(issue.getType()));
+                preIssuesInstance.add(importIssueInstance(caseId, lastCommit, issue, APPEAR));
+            }
+        }
+        for(int i = allCommit.size() - 2; i >= 0; i--){
+            HashMap<CommitProperty, Object> commitInfo = allCommit.get(i);
+            GitCommit commit = importCommit(commitInfo);
+            String id = repoName + "_" + bName + "_" + commit.getHash_val();
+            SonarScanner.ScanRepo(path, id);
+            SonarResultParser parser1 = new SonarResultParser();
+            List<RawIssue> curRawIssues;
+            List<IssueInstance> curIssuesInstance = new ArrayList<>();
+            if(parser1.getSonarResult(repoName, bName, commit.getHash_val())) {
+                curRawIssues = parser1.getResultRawIssues();
+                IssueMatcher.match(preRawIssues, curRawIssues, path);
+                for(int j = 0; j < curRawIssues.size(); j++){
+                    RawIssue issue = curRawIssues.get(j);
+                    if(!issue.isMapped()){
+                        Integer caseId = IssueCaseCRUD.insertIssueCase(commit.getCommit_id(), SonarString2CaseType(issue.getType()));
+                        System.out.println("appear" + caseId);
+                        curIssuesInstance.add(importIssueInstance(caseId, commit, issue, APPEAR));
+                    } else {
+                        RawIssue mappedIssue = issue.getMappedRawIssue();
+                        IssueInstance mappedIssueInstance = preIssuesInstance.get(preRawIssues.indexOf(mappedIssue));
+                        if(compareRawIssue(issue, mappedIssue)){
+                            System.out.println("keep" + mappedIssueInstance.getIssue_case_id());
+                            curIssuesInstance.add(mappedIssueInstance);
+                        } else {
+                            System.out.println("update" + mappedIssueInstance.getIssue_case_id());
+                            curIssuesInstance.add(importIssueInstance(mappedIssueInstance.getIssue_case_id(), commit, issue, UPDATE));
+                        }
+                    }
+                }
+                for(int j = 0; j < preRawIssues.size(); j++){
+                    RawIssue issue = preRawIssues.get(j);
+                    if(!issue.isMapped()){
+                        IssueInstance thisInstance = preIssuesInstance.get(j);
+                        System.out.println("disappear" + thisInstance.getIssue_case_id());
+                        curIssuesInstance.add(importIssueInstance(thisInstance.getIssue_case_id(), commit, issue, DISAPPEAR));
+                        IssueCaseCRUD.solveIssueCase(thisInstance.getIssue_case_id(), commit.getCommit_id());
+                    }
+                }
+                for(RawIssue rawIssue : curRawIssues){
+                    rawIssue.resetMappedInfo();
+                }
+                preRawIssues = curRawIssues;
+                preIssuesInstance = curIssuesInstance;
+            }
         }
     }
 
-    public Integer importCommit(HashMap<CommitProperty, Object> commitInfo){
+    private IssueInstance importIssueInstance(Integer caseId, GitCommit commit, RawIssue issue, INSTANCE_STATUS status) throws Exception {
+        IssueInstance instance = new IssueInstance(null, caseId, commit.getCommit_id(),
+                status, issue.getFileName(), issue.getDetail());
+        instance.setIssue_instance_id(IssueInstanceCRUD.insertIssueInstance(instance));
+        int sequence = 0;
+        for (Location location : issue.getLocations()){
+            IssueLocation issueLocation = new IssueLocation(instance.getIssue_instance_id(),
+                    sequence, location.getStartLine(), location.getEndLine());
+            IssueLocationCRUD.insertIssueLocation(issueLocation);
+            sequence++;
+        }
+        return instance;
+    }
+
+    public GitCommit importCommit(HashMap<CommitProperty, Object> commitInfo){
         Integer commitId = 0;
-        GitCommit gitCommit = new GitCommit(null, null,
+        GitCommit gitCommit = new GitCommit(curBranchId, null,
                 (String)commitInfo.get(HASH),
                 new Timestamp(((Date)commitInfo.get(TIME)).getTime()),
                 (String)commitInfo.get(AUTHOR)
         );
         try {
             commitId = GitCommitCRUD.insertGitCommit(gitCommit);
+            gitCommit.setCommit_id(commitId);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return commitId;
+        return gitCommit;
     }
 
-    public void importIssue(){
+    private boolean compareRawIssue(RawIssue rawIssue1, RawIssue rawIssue2){
+        if(!rawIssue1.getFileName().equals(rawIssue2.getFileName())) return false;
+        if(!rawIssue1.getDetail().equals(rawIssue2.getDetail())) return false;
+        List<Location> location1 = rawIssue1.getLocations();
+        List<Location> location2 = rawIssue1.getLocations();
+        return listValEquals(location1, location2);
+    }
 
+
+    public static <T> boolean listValEquals(List<T> t1, List<T> t2) {
+        if (t1 == t2) { // 为空or引用地址一致时
+            return true;
+        } else if (t1.size() != t2.size()) { // 数量一致, 过滤掉了list1中有{1,1,3},list2中有{1,3,4}的场景
+            return false;
+        }
+        for (T t : t1) {
+            if (!t2.contains(t)) { // equals比较
+                return false;
+            }
+        }
+        return true;
     }
 }

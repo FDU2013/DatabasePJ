@@ -13,28 +13,31 @@ public class IssueMatcher {
     //private static final String SEPARATOR = System.getProperty("file.separator");
     private static Set<String> getAllMethodsAndFields(File file) throws IOException {
         assert file.isDirectory();
-        Set<String> res = new HashSet<>();
         File[] fs = file.listFiles();
-        if(fs != null) {
-            for (File f : fs) {
-                if (f.isDirectory())
-                    res.addAll(getAllMethodsAndFields(f));
-                if (f.isFile()) {
-                    String name = f.getName();
-                    String[] parts = name.split("\\.");
-                    name = parts[parts.length - 1];
-                    if(name.equals("java"))
-                        res.addAll(AstParserUtil.getMethodsAndFieldsInFile(f.getAbsolutePath()));
+        if(fs == null)
+            return null;
+        Set<String> res = new HashSet<>();
+        for (File f : fs) {
+            if (f.isDirectory()) {
+                Set<String> out = getAllMethodsAndFields(f);
+                if(out != null)
+                    res.addAll(out);
+            }
+            if (f.isFile()) {
+                String name = f.getName();
+                String[] parts = name.split("\\.");
+                name = parts[parts.length - 1];
+                if(name.equals("java"))
+                    //System.out.println(f.getName());
+                    res.addAll(AstParserUtil.getMethodsAndFieldsInFile(f.getAbsolutePath()));
                 }
             }
-        }
+
         return res;
     }
 
-    public static List<List<RawIssue>> match(List<RawIssue> preIssues, List<RawIssue> curIssues, String absoluteRepoPath) {
-        List<List<RawIssue>> res = new ArrayList<>();
-        //AnalyzerUtil.addExtraAttributeInRawIssues(preIssues, absoluteRepoPath);
-        //AnalyzerUtil.addExtraAttributeInRawIssues(curIssues, absoluteRepoPath);
+    public static void match(List<RawIssue> preIssues, List<RawIssue> curIssues, String absoluteRepoPath) {
+        //List<List<RawIssue>> res = new ArrayList<>();
         File repoDir = new File(absoluteRepoPath);
         Set<String> all = null;
         try {
@@ -42,9 +45,11 @@ public class IssueMatcher {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        AnalyzerUtil.addExtraAttributeInRawIssues(preIssues, absoluteRepoPath);
+        AnalyzerUtil.addExtraAttributeInRawIssues(curIssues, absoluteRepoPath);
         RawIssueMatcher.match(preIssues, curIssues, all);
-        res.add(preIssues);
-        res.add(curIssues);
-        return res;
+        //res.add(preIssues);
+        //res.add(curIssues);
+        //return res;
     }
 }

@@ -121,6 +121,8 @@ public class CommitService {
                         map.put(instance.getIssue_case_id(),instance);
                         break;
                     case UPDATE:
+                        assert instance.getIssue_case_id()!= null;
+                        assert map.containsKey(instance.getIssue_case_id());
                         map.get(instance.getIssue_case_id()).setLatest_instance_id(instance.getIssue_instance_id());
                         break;
                     case DISAPPEAR:

@@ -21,7 +21,9 @@ public class IssueCaseCRUD {
         ps.setInt(1,appear_commit_id);
         ps.setString(2,"UNSOLVED");
         ps.setString(3, EnumUtil.Enum2String(type));
-        GitCommit gitCommit = GitCommitCRUD.selectGitCommitByCommitId(appear_commit_id);
+        //System.out.println(appear_commit_id);
+        GitCommit gitCommit = GitCommitCRUD.selectGitCommitByCommitIdWithoutBranch(appear_commit_id);
+
         ps.setString(4, gitCommit.getCommit_time().toString());
         ps.setString(5, gitCommit.getCommitter());
         ps.execute();
@@ -37,7 +39,7 @@ public class IssueCaseCRUD {
         String sql = "update issue_case set solve_commit_id=?, solve_time=?, solve_committer=?, case_status=? where issue_case_id=?";
         PreparedStatement ps = connection.prepareStatement(sql);
         ps.setInt(1,solve_commit_id);
-        GitCommit gitCommit = GitCommitCRUD.selectGitCommitByCommitId(solve_commit_id);
+        GitCommit gitCommit = GitCommitCRUD.selectGitCommitByCommitIdWithoutBranch(solve_commit_id);
         ps.setString(2, gitCommit.getCommit_time().toString());
         ps.setString(3, gitCommit.getCommitter());
         ps.setString(4,"SOLVED");

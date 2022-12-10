@@ -56,7 +56,14 @@ public class GitCommitCRUD {
 
 //    private static List<Integer> getAllCommit
 
-
+    public static GitCommit selectGitCommitByCommitIdWithoutBranch(Integer commit_id) throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select * from git_commit where commit_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,commit_id);
+        ResultSet rs = ps.executeQuery();
+        return getFirstGitCommitFromResult(rs);
+    }
     public static GitCommit selectGitCommitByCommitId(Integer commit_id) throws Exception {
         Connection connection = Connect.getConnection();
         Integer branch_id = BranchView.getCurrentBranch();

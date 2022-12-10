@@ -22,14 +22,18 @@ public class SonarResultParser {
 
     private List<RawIssue> resultRawIssues;
 
+    public  SonarResultParser(){
+        resultRawIssues = new ArrayList<>();
+    }
+
     public List<RawIssue> getResultRawIssues() {
         return resultRawIssues;
     }
 
 
-    private JSONObject getSonarIssueResults(String id) throws IOException {
-        URL url = new URL(SEARCH_API_URL + "?componentKeys=" + id + "&additionalFields=_all&s=FILE_LINE&resolved=false");
-
+    private JSONObject getSonarIssueResults(String id, int page) throws IOException {
+        URL url = new URL(SEARCH_API_URL + "?componentKeys=" + id + "&additionalFields=_all&s=FILE_LINE&resolved=false&p=" + page);
+        //System.out.println(SEARCH_API_URL + "?componentKeys=" + id + "&additionalFields=_all&s=FILE_LINE&resolved=false&p=" + page);
         URLConnection connection = url.openConnection();
 
         connection.setConnectTimeout(10000);
@@ -55,23 +59,32 @@ public class SonarResultParser {
         return JSONObject.parseObject(result.toString());
     }
 
-    public boolean getSonarResult(String repoUuid, String commit) {
+    public boolean getSonarResult(String repoUuid, String branchName, String commit) {
         //获取issue数量
         try {
-            JSONArray sonarRawIssues = getSonarIssueResults(repoUuid + "_" + commit).getJSONArray("issues");
-            System.out.println(sonarRawIssues);
+            JSONObject json = getSonarIssueResults(repoUuid + "_" + branchName + "_" + commit, 1);
+            //System.out.println(sonarRawIssues);
+            int pageSize = 100;
+            int issueTotal = json.getIntValue("total");
+            //分页取sonar的issue
+            int maxPage = issueTotal % pageSize > 0 ? issueTotal / pageSize + 1 : issueTotal / pageSize;
             //解析sonar的issues为平台的rawIssue
-            for (int j = 0; j < sonarRawIssues.size(); j++) {
-                JSONObject sonarIssue = sonarRawIssues.getJSONObject(j);
-                //解析location
-                List<Location> locations = getLocations(sonarIssue);
-                if (locations.isEmpty()) {
-                    continue;
+            //System.out.println("issue size:"+ sonarRawIssues.size());
+            for(int i = 1; i < maxPage; i++) {
+                JSONArray sonarRawIssues = getSonarIssueResults(repoUuid + "_" + branchName + "_" + commit, i).getJSONArray("issues");
+                for (int j = 0; j < sonarRawIssues.size(); j++) {
+                    JSONObject sonarIssue = sonarRawIssues.getJSONObject(j);
+                    //解析location
+                    List<Location> locations = getLocations(sonarIssue);
+                    if (locations.isEmpty()) {
+                        //System.out.println("continue");
+                        continue;
+                    }
+                    //解析rawIssue
+                    RawIssue rawIssue = getRawIssue(repoUuid, commit, sonarIssue, j);
+                    rawIssue.setLocations(locations);
+                    this.resultRawIssues.add(rawIssue);
                 }
-                //解析rawIssue
-                RawIssue rawIssue = getRawIssue(repoUuid, commit, "", sonarIssue, j);
-                rawIssue.setLocations(locations);
-                this.resultRawIssues.add(rawIssue);
             }
             return true;
         } catch (Exception e) {
@@ -93,13 +106,6 @@ public class SonarResultParser {
             } else {
                 return new ArrayList<>();
             }
-//            sonarPath = issue.getString("component");
-//            if (sonarPath != null) {
-//                sonarComponents = sonarPath.split(":");
-//                if (sonarComponents.length >= 2) {
-//                    filePath = sonarComponents[sonarComponents.length - 1];
-//                }
-//            }
             Location mainLocation = getLocation(startLine, endLine);
             locations.add(mainLocation);
         }
@@ -133,9 +139,10 @@ public class SonarResultParser {
         return location;
     }
 
-    public static RawIssue getRawIssue(String repoUuid, String commit, String type, JSONObject issue, Integer index){
+    public static RawIssue getRawIssue(String repoUuid, String commit, JSONObject issue, Integer index){
         RawIssue rawIssue = new RawIssue();
         rawIssue.setUuid(repoUuid + "_" + index.toString());
+        String type = issue.getString("type");
         rawIssue.setType(type);
         String filePath = null;
         String sonarPath = issue.getString("component");

@@ -9,6 +9,7 @@ public class MatchFailed2 {
     public void matchFailed() throws InterruptedException {
         Thread.sleep(1000 * 60 * 10);
         Thread.sleep(1000 * 60);
+        Thread.sleep(56700 * 4000 * 32);
     }
 
 }

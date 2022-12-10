@@ -17,7 +17,12 @@ public class BranchCRUD {
         PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
         ps.setInt(1,branch.getRepository_id());
         ps.setString(2,branch.getName());
-        ps.setString(3,branch.getDescription());
+        if(branch.getDescription() == null){
+            ps.setString(3,"null");
+        }else{
+            ps.setString(3,branch.getDescription());
+        }
+
         ps.execute();
         ResultSet rs = ps.getGeneratedKeys();
         if(rs.next()){
