@@ -15,10 +15,7 @@ import sort.GitCommitTimeComparator;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.TreeMap;
+import java.util.*;
 
 public class CommitService {
     private static GitCommit gitCommit;
@@ -111,6 +108,7 @@ public class CommitService {
         List<GitCommit> commits = GitCommitCRUD.getAllCommitUntilOneCommit(gitCommit);
         commits.sort(new GitCommitTimeComparator());
         TreeMap<Integer, ExtendedInstance> map = new TreeMap<>();
+        Set<Integer> delete_set = new HashSet<>();
         for(GitCommit commit:commits){
             //逐个考虑commit，把每个commit的所有issue_instance拿出来
             List<ExtendedInstance> extendedInstances = IssueInstanceCRUD.getAllExtendedInstanceByCommitId(commit.getCommit_id());
@@ -118,15 +116,26 @@ public class CommitService {
                 switch (instance.getInstance_status()){
                     case APPEAR:
                         instance.setLatest_instance_id(instance.getIssue_instance_id());
-                        map.put(instance.getIssue_case_id(),instance);
+                        map.put(instance.getIssue_case_id(), new ExtendedInstance(instance));
                         break;
                     case UPDATE:
-                        assert instance.getIssue_case_id()!= null;
-                        assert map.containsKey(instance.getIssue_case_id());
-                        map.get(instance.getIssue_case_id()).setLatest_instance_id(instance.getIssue_instance_id());
+                        if(delete_set.contains(instance.getIssue_case_id())){
+                            System.out.println("case_id: "+instance.getIssue_case_id());
+                            System.out.println("case_instance: "+instance.getIssue_instance_id());
+                        }
+                        assert !delete_set.contains(instance.getIssue_case_id());
+                        try{
+                            map.get(instance.getIssue_case_id()).setLatest_instance_id(instance.getIssue_instance_id());
+                        }catch (Exception e){
+                            System.out.println("case_id: "+instance.getIssue_case_id());
+                            System.out.println("case_instance: "+instance.getIssue_instance_id());
+                            throw new Exception();
+                        }
+                        //map.get(instance.getIssue_case_id()).setLatest_instance_id(instance.getIssue_instance_id());
                         break;
                     case DISAPPEAR:
                         map.remove(instance.getIssue_case_id());
+                        delete_set.add(instance.getIssue_case_id());
                         break;
                     default:
                         System.out.println("error in 详细列表");
