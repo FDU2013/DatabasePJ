@@ -22,22 +22,22 @@ public class SonarScanner {
 //            e.printStackTrace();
 //        }
         Scanner input = null;
-//        StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder();
         Process process = null;
         String cmd = "cmd /c cd " + path +  " && " + command + id;
-        System.out.println(cmd);
+        System.out.println("In scanning.Waiting...");
         try {
             process = Runtime.getRuntime().exec(cmd);
             assert process != null;
-            process.waitFor(40, TimeUnit.SECONDS);
+            //process.waitFor(14, TimeUnit.SECONDS);
 
             InputStream is = process.getInputStream();
             input = new Scanner(is);
-//            while (input.hasNextLine()) {
-//                result.append(input.nextLine()).append("\n");
-//            }
-//            result.insert(0, cmd + "\n"); //加上命令本身，打印出来
-        } catch (IOException | InterruptedException e) {
+            while (input.hasNextLine()) {
+                result.append(input.nextLine()).append("\n");
+            }
+            result.insert(0, "Executed command: " + cmd + "\nOutput info:\n");
+        } catch (IOException e) {
             e.printStackTrace();
         } finally {
             if (input != null) {
@@ -47,6 +47,6 @@ public class SonarScanner {
                 process.destroy();
             }
         }
-        //System.out.println(result);;
+        System.out.println(result);;
     }
 }

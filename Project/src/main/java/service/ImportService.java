@@ -18,7 +18,7 @@ public class ImportService {
         repoImport.importRepo(description);
         repoImport.importAllBranch();
         try {
-            repoImport.importAllCommitAndIssue("refs/heads/master");
+            repoImport.importAllCommitAndIssue("master");
         } catch (Exception e) {
             e.printStackTrace();
         }

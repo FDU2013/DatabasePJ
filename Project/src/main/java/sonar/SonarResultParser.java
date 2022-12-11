@@ -30,20 +30,26 @@ public class SonarResultParser {
         return resultRawIssues;
     }
 
+    public static void main(String[] args) {
+        try {
+            JSONObject json = getSonarIssueResults("fg_main_b8024d988226df0b529a7566d905f4e67ee3aa31", 1 );
+            System.out.println(json.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-    private JSONObject getSonarIssueResults(String id, int page) throws IOException {
-        URL url = new URL(SEARCH_API_URL + "?componentKeys=" + id + "&additionalFields=_all&s=FILE_LINE&resolved=false&p=" + page);
-        //System.out.println(SEARCH_API_URL + "?componentKeys=" + id + "&additionalFields=_all&s=FILE_LINE&resolved=false&p=" + page);
+    private static JSONObject getSonarIssueResults(String id, int page) throws IOException {
+        URL url = new URL(SEARCH_API_URL + "?componentKeys=" + id + "&p=" + page);
+        System.out.println(SEARCH_API_URL + "?componentKeys=" + id + "&p=" + page);
         URLConnection connection = url.openConnection();
-
         connection.setConnectTimeout(10000);
         connection.setReadTimeout(10000);
 
         connection.setRequestProperty("authorization", AUTHORIZATION);
         connection.setRequestProperty("accept", "*/*");
         connection.setRequestProperty("connection", "Keep-Alive");
-        connection.setRequestProperty("user-agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 Edg/107.0.1418.56");
-
+        connection.setRequestProperty("User-Agent","PostmanRuntime/7.29.0");
         connection.connect();
 
         //读返回值
@@ -55,7 +61,7 @@ public class SonarResultParser {
 
         }
         resp.close();
-
+        System.out.println(result);
         return JSONObject.parseObject(result.toString());
     }
 
@@ -63,26 +69,30 @@ public class SonarResultParser {
         //获取issue数量
         try {
             JSONObject json = getSonarIssueResults(repoUuid + "_" + branchName + "_" + commit, 1);
-            //System.out.println(sonarRawIssues);
+            System.out.println(repoUuid + "_" + branchName + "_" + commit);
+            System.out.println(json.toString());
             int pageSize = 100;
             int issueTotal = json.getIntValue("total");
             //分页取sonar的issue
             int maxPage = issueTotal % pageSize > 0 ? issueTotal / pageSize + 1 : issueTotal / pageSize;
+            System.out.println("issue total "+issueTotal +"  maxPage "+ maxPage);
             //解析sonar的issues为平台的rawIssue
             //System.out.println("issue size:"+ sonarRawIssues.size());
-            for(int i = 1; i < maxPage; i++) {
+            for(int i = 1; i <= maxPage; i++) {
                 JSONArray sonarRawIssues = getSonarIssueResults(repoUuid + "_" + branchName + "_" + commit, i).getJSONArray("issues");
+                System.out.println("issue json size "+sonarRawIssues.size());
                 for (int j = 0; j < sonarRawIssues.size(); j++) {
                     JSONObject sonarIssue = sonarRawIssues.getJSONObject(j);
                     //解析location
                     List<Location> locations = getLocations(sonarIssue);
                     if (locations.isEmpty()) {
-                        //System.out.println("continue");
+                        System.out.println("continue");
                         continue;
                     }
                     //解析rawIssue
                     RawIssue rawIssue = getRawIssue(repoUuid, commit, sonarIssue, j);
                     rawIssue.setLocations(locations);
+                    System.out.println("add rawIssue");
                     this.resultRawIssues.add(rawIssue);
                 }
             }

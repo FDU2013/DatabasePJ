@@ -88,7 +88,12 @@ public class GitUtil {
         }
         assert allBranch != null;
         for (Ref ref : allBranch) {
-            res.add(ref.getName());
+            String refName = ref.getName();
+            if (refName.startsWith("refs/heads/")) {                       //需要进行筛选
+                String branchName = refName.replace("refs/heads/", "");
+                //System.out.println(branchName);
+                res.add(branchName);
+            }
         }
         return res;
     }
