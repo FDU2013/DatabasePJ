@@ -48,9 +48,20 @@ public class IssueInstanceCRUD {
         return list;
     }
 
-    public static List<ExtendedInstance> getAllExtendedInstanceByCommitId(Integer commit_id) throws Exception {
+    public static List<ExtendedInstance> getAllExtendedInstanceByCommitId(Integer commit_id, boolean use_index) throws Exception {
         Connection connection = Connect.getConnection();
         String sql = "select * from issue_case join issue_instance using(issue_case_id) where commit_id=?";
+        if(!use_index) sql = "select * from issue_case join issue_instance ignore index(instance_index_on_commit_id) using(issue_case_id) where commit_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,commit_id);
+        ResultSet rs = ps.executeQuery();
+        return getAllExtendedInstanceFromResult(rs);
+    }
+
+    public static List<ExtendedInstance> getAllExtendedInstanceByCommitIdNoCache(Integer commit_id, boolean use_index) throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select SQL_NO_CACHE * from issue_case join issue_instance using(issue_case_id) where commit_id=?";
+        if(!use_index) sql = "select SQL_NO_CACHE * from issue_case join issue_instance ignore index(instance_index_on_commit_id) using(issue_case_id) where commit_id=?";
         PreparedStatement ps = connection.prepareStatement(sql);
         ps.setInt(1,commit_id);
         ResultSet rs = ps.executeQuery();

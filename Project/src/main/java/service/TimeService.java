@@ -19,12 +19,11 @@ import java.util.TreeMap;
 
 public class TimeService {
     private static Timestamp start_time, end_time;
-
     public static void timeInterAct() {
         if(!BranchView.isValid())return;
         try {
             Step1DecideTime();
-            List<GitCommit> commits = GitCommitCRUD.getAllCommitBetween(start_time,end_time);
+            List<GitCommit> commits = GitCommitCRUD.getAllCommitBetween(start_time,end_time,true);
             if(commits.isEmpty()){
                 System.out.println("该时间段内无commit");
                 return;
@@ -55,7 +54,7 @@ public class TimeService {
         Integer appear=0;
         for(GitCommit commit:commits){
             //逐个考虑commit，把每个commit的所有issue_instance拿出来
-            List<ExtendedInstance> extendedInstances = IssueInstanceCRUD.getAllExtendedInstanceByCommitId(commit.getCommit_id());
+            List<ExtendedInstance> extendedInstances = IssueInstanceCRUD.getAllExtendedInstanceByCommitId(commit.getCommit_id(),true);
             for(ExtendedInstance instance:extendedInstances){
                 switch (instance.getInstance_status()){
                     case APPEAR:

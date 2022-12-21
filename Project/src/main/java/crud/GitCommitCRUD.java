@@ -111,10 +111,22 @@ public class GitCommitCRUD {
         return getAllGitCommitFromResult(rs);
     }
 
-    public static List<GitCommit> getAllCommitBetween(Timestamp start_time, Timestamp end_time) throws Exception {
+    public static List<GitCommit> getAllCommitUntilOneCommitNoCache(GitCommit gitCommit) throws Exception {
+        Connection connection = Connect.getConnection();
+        Integer branch_id = BranchView.getCurrentBranch();
+        String sql = "select SQL_NO_CACHE * from git_commit where commit_time<=? and branch_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setTimestamp(1,gitCommit.getCommit_time());
+        ps.setInt(2,branch_id);
+        ResultSet rs = ps.executeQuery();
+        return getAllGitCommitFromResult(rs);
+    }
+
+    public static List<GitCommit> getAllCommitBetween(Timestamp start_time, Timestamp end_time, boolean use_index) throws Exception {
         Connection connection = Connect.getConnection();
         Integer branch_id = BranchView.getCurrentBranch();
         String sql = "select * from git_commit where branch_id=? and commit_time between ? and ?";
+        if(!use_index) sql = "select * from git_commit ignore index(commit_index_on_time) where branch_id=? and commit_time between ? and ?";
         PreparedStatement ps = connection.prepareStatement(sql);
         ps.setInt(1,branch_id);
         ps.setTimestamp(2,start_time);
@@ -122,4 +134,19 @@ public class GitCommitCRUD {
         ResultSet rs = ps.executeQuery();
         return getAllGitCommitFromResult(rs);
     }
+
+    public static List<GitCommit> getAllCommitBetweenNoCache(Timestamp start_time, Timestamp end_time, boolean use_index) throws Exception {
+        Connection connection = Connect.getConnection();
+        Integer branch_id = BranchView.getCurrentBranch();
+        String sql = "select SQL_NO_CACHE * from git_commit where branch_id=? and commit_time between ? and ?";
+        if(!use_index) sql = "select SQL_NO_CACHE * from git_commit ignore index(commit_index_on_time) where branch_id=? and commit_time between ? and ?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,branch_id);
+        ps.setTimestamp(2,start_time);
+        ps.setTimestamp(3,end_time);
+        ResultSet rs = ps.executeQuery();
+        return getAllGitCommitFromResult(rs);
+    }
+
+
 }

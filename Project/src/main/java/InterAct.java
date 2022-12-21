@@ -1,8 +1,5 @@
 import init.BranchView;
-import service.CommitService;
-import service.CommitterService;
-import service.ImportService;
-import service.TimeService;
+import service.*;
 
 import java.util.Scanner;
 
@@ -35,6 +32,9 @@ public class InterAct {
                 case "import":
                     ImportService.ImportServiceInterAct();
                     break;
+                case "index":
+                    IndexService.compare();
+                    break;
                 default:
                     System.out.println("错误的指令，输入help查看所有指令\n\n");
             }
@@ -49,6 +49,7 @@ public class InterAct {
         System.out.println("--committer 查看指定程序员");
         System.out.println("--checkout  切换仓库/分支");
         System.out.println("--import    导入代码仓库");
+        System.out.println("--index    比较有索引和没有索引的性能");
         System.out.println("--exit 退出");
     }
 

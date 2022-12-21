@@ -69,18 +69,40 @@ public class IssueCaseCRUD {
         return list;
     }
 
-    public static List<IssueCase> getAppearIssueCaseByCommit(GitCommit gitCommit) throws Exception {
+    public static List<IssueCase> getAppearIssueCaseByCommit(GitCommit gitCommit, boolean use_index) throws Exception {
         Connection connection = Connect.getConnection();
         String sql = "select * from issue_case where appear_commit_id=?";
+        if(!use_index) sql = "select * from issue_case ignore index(case_index_on_appear_id) where appear_commit_id=?";
         PreparedStatement ps = connection.prepareStatement(sql);
         ps.setInt(1,gitCommit.getCommit_id());
         ResultSet rs = ps.executeQuery();
         return getAllIssueCaseFromResult(rs);
     }
 
-    public static List<IssueCase> getSolvedIssueCaseByCommit(GitCommit gitCommit) throws Exception {
+    public static List<IssueCase> getSolvedIssueCaseByCommit(GitCommit gitCommit, boolean use_index) throws Exception {
         Connection connection = Connect.getConnection();
         String sql = "select * from issue_case where solve_commit_id=?";
+        if(!use_index) sql = "select * from issue_case ignore index(case_index_on_solve_id) where solve_commit_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,gitCommit.getCommit_id());
+        ResultSet rs = ps.executeQuery();
+        return getAllIssueCaseFromResult(rs);
+    }
+
+    public static List<IssueCase> getAppearIssueCaseByCommitNoCache(GitCommit gitCommit, boolean use_index) throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select SQL_NO_CACHE * from issue_case where appear_commit_id=?";
+        if(!use_index) sql = "select SQL_NO_CACHE * from issue_case ignore index(case_index_on_appear_id) where appear_commit_id=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1,gitCommit.getCommit_id());
+        ResultSet rs = ps.executeQuery();
+        return getAllIssueCaseFromResult(rs);
+    }
+
+    public static List<IssueCase> getSolvedIssueCaseByCommitNoCache(GitCommit gitCommit, boolean use_index) throws Exception {
+        Connection connection = Connect.getConnection();
+        String sql = "select SQL_NO_CACHE * from issue_case where solve_commit_id=?";
+        if(!use_index) sql = "select SQL_NO_CACHE * from issue_case ignore index(case_index_on_solve_id) where solve_commit_id=?";
         PreparedStatement ps = connection.prepareStatement(sql);
         ps.setInt(1,gitCommit.getCommit_id());
         ResultSet rs = ps.executeQuery();

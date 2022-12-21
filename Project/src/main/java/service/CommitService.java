@@ -85,12 +85,12 @@ public class CommitService {
 
             System.out.println("-----------------");
             System.out.println("--新引入的缺陷：");
-            List<IssueCase> appearList = IssueCaseCRUD.getAppearIssueCaseByCommit(gitCommit);
+            List<IssueCase> appearList = IssueCaseCRUD.getAppearIssueCaseByCommit(gitCommit,true);
             PrintIssueCaseNumByType(appearList);
 
             System.out.println("-----------------");
             System.out.println("--解决的缺陷：");
-            List<IssueCase> solveList = IssueCaseCRUD.getSolvedIssueCaseByCommit(gitCommit);
+            List<IssueCase> solveList = IssueCaseCRUD.getSolvedIssueCaseByCommit(gitCommit,true);
             PrintIssueCaseNumByType(solveList);
             System.out.println("-----------------");
             System.out.println("--详细列表");
@@ -111,7 +111,7 @@ public class CommitService {
         Set<Integer> delete_set = new HashSet<>();
         for(GitCommit commit:commits){
             //逐个考虑commit，把每个commit的所有issue_instance拿出来
-            List<ExtendedInstance> extendedInstances = IssueInstanceCRUD.getAllExtendedInstanceByCommitId(commit.getCommit_id());
+            List<ExtendedInstance> extendedInstances = IssueInstanceCRUD.getAllExtendedInstanceByCommitId(commit.getCommit_id(),true);
             for(ExtendedInstance instance:extendedInstances){
                 switch (instance.getInstance_status()){
                     case APPEAR:
