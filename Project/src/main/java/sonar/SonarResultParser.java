@@ -18,7 +18,7 @@ import java.util.List;
 public class SonarResultParser {
 
     private static final String SEARCH_API_URL = "http://127.0.0.1:9000/api/issues/search";
-    private static final String AUTHORIZATION = "Basic YWRtaW46emp4emp4";
+    private static final String AUTHORIZATION = "Basic YWRtaW46MTIzNA==";
 
     private List<RawIssue> resultRawIssues;
 
@@ -31,6 +31,7 @@ public class SonarResultParser {
     }
 
     public static void main(String[] args) {
+        //test:
         try {
             JSONObject json = getSonarIssueResults("fg_main_b8024d988226df0b529a7566d905f4e67ee3aa31", 1 );
             System.out.println(json.toString());
@@ -41,7 +42,7 @@ public class SonarResultParser {
 
     private static JSONObject getSonarIssueResults(String id, int page) throws IOException {
         URL url = new URL(SEARCH_API_URL + "?componentKeys=" + id + "&p=" + page);
-        System.out.println(SEARCH_API_URL + "?componentKeys=" + id + "&p=" + page);
+        //System.out.println(SEARCH_API_URL + "?componentKeys=" + id + "&p=" + page);
         URLConnection connection = url.openConnection();
         connection.setConnectTimeout(10000);
         connection.setReadTimeout(10000);
@@ -61,7 +62,7 @@ public class SonarResultParser {
 
         }
         resp.close();
-        System.out.println(result);
+        //System.out.println(result);
         return JSONObject.parseObject(result.toString());
     }
 
@@ -69,8 +70,8 @@ public class SonarResultParser {
         //获取issue数量
         try {
             JSONObject json = getSonarIssueResults(repoUuid + "_" + branchName + "_" + commit, 1);
-            System.out.println(repoUuid + "_" + branchName + "_" + commit);
-            System.out.println(json.toString());
+            //System.out.println(repoUuid + "_" + branchName + "_" + commit);
+            //System.out.println(json.toString());
             int pageSize = 100;
             int issueTotal = json.getIntValue("total");
             //分页取sonar的issue
@@ -80,19 +81,19 @@ public class SonarResultParser {
             //System.out.println("issue size:"+ sonarRawIssues.size());
             for(int i = 1; i <= maxPage; i++) {
                 JSONArray sonarRawIssues = getSonarIssueResults(repoUuid + "_" + branchName + "_" + commit, i).getJSONArray("issues");
-                System.out.println("issue json size "+sonarRawIssues.size());
+                //System.out.println("issue json size "+sonarRawIssues.size());
                 for (int j = 0; j < sonarRawIssues.size(); j++) {
                     JSONObject sonarIssue = sonarRawIssues.getJSONObject(j);
                     //解析location
                     List<Location> locations = getLocations(sonarIssue);
                     if (locations.isEmpty()) {
-                        System.out.println("continue");
+                        //System.out.println("continue");
                         continue;
                     }
                     //解析rawIssue
                     RawIssue rawIssue = getRawIssue(repoUuid, commit, sonarIssue, j);
                     rawIssue.setLocations(locations);
-                    System.out.println("add rawIssue");
+                    //System.out.println("add rawIssue");
                     this.resultRawIssues.add(rawIssue);
                 }
             }

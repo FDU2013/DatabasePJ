@@ -1,7 +1,9 @@
 package sonar;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
@@ -28,16 +30,15 @@ public class SonarScanner {
         System.out.println("In scanning.Waiting...");
         try {
             process = Runtime.getRuntime().exec(cmd);
-            assert process != null;
-            //process.waitFor(14, TimeUnit.SECONDS);
-
+            //process.waitFor(20, TimeUnit.SECONDS);
             InputStream is = process.getInputStream();
             input = new Scanner(is);
             while (input.hasNextLine()) {
                 result.append(input.nextLine()).append("\n");
             }
             result.insert(0, "Executed command: " + cmd + "\nOutput info:\n");
-        } catch (IOException e) {
+        } catch (IOException  e) {
+            System.out.println("In scanning.Waiting.1..");
             e.printStackTrace();
         } finally {
             if (input != null) {
@@ -48,5 +49,10 @@ public class SonarScanner {
             }
         }
         System.out.println(result);;
+    }
+
+    public static void main(String[] args) {
+        //test:
+        ScanRepo("C:\\MyMine\\CS_SE\\Projects\\SonarTest", "okoko");
     }
 }

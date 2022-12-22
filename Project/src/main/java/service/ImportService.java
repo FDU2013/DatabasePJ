@@ -17,10 +17,10 @@ public class ImportService {
         RepoImport repoImport = new RepoImport(repo_name, path);
         repoImport.importRepo(description);
         repoImport.importAllBranch();
-        try {
-            repoImport.importAllCommitAndIssue("master");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        try {
+//            repoImport.importAllCommitAndIssue("master");
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }
 }
