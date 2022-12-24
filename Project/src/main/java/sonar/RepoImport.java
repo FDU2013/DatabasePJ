@@ -6,6 +6,7 @@ import common.CommitProperty;
 import common.INSTANCE_STATUS;
 import crud.*;
 import entity.*;
+import init.Connect;
 import util.GitUtil;
 
 import java.sql.Timestamp;
@@ -49,7 +50,14 @@ public class RepoImport {
         List<String> allBranch = gitUtil.getAllBranch();
         for(String branch : allBranch) {
            // Integer id =
-            System.out.println(importBranch(branch));
+            //System.out.println(importBranch(branch));
+            curBranchId = importBranch(branch);
+            try {
+                importAllCommitAndIssue(branch);
+            } catch (Exception e) {
+                e.printStackTrace();
+                break;
+            }
             //TODO sds
             //if(branch.equals("refs/heads/master")) curBranchId = id;
         }
@@ -67,29 +75,38 @@ public class RepoImport {
     }
 
     public void importAllCommitAndIssue(String branchName) throws Exception {
-        List<String> allBranch = gitUtil.getAllBranch();
+        //List<String> allBranch = gitUtil.getAllBranch();
         //f(!allBranch.contains(branchName))
         //branchName = allBranch.get(0);
-        branchName = "main";
+        //branchName = "main";
         //curBranchId = allBranch.indexOf(branchName) + 1;
-        curBranchId = 1;
+        //curBranchId = 1;
         gitUtil.checkoutBranch(branchName);
         ArrayList<HashMap<CommitProperty, Object>> allCommit = gitUtil.getAllCommit();
-        GitCommit lastCommit = importCommit(allCommit.get(allCommit.size() - 2));
-        gitUtil.checkoutCommit(lastCommit.getHash_val());
-        String sonarID = repoName + "_" + branchName + "_" + lastCommit.getHash_val();
-        SonarScanner.ScanRepo(path, sonarID);
-        SonarResultParser parser = new SonarResultParser();
         List<IssueInstance> preIssuesInstance = new ArrayList<>();
-        Thread.sleep(10000);
-        parser.getSonarResult(repoName, branchName, lastCommit.getHash_val());
-        List<RawIssue> preRawIssues = parser.getResultRawIssues();
-        for(RawIssue issue : preRawIssues){
-            Integer caseId = IssueCaseCRUD.insertIssueCase(lastCommit.getCommit_id(), SonarString2CaseType(issue.getType()));
-            preIssuesInstance.add(importIssueInstance(caseId, lastCommit, issue, APPEAR));
+        List<RawIssue> preRawIssues;
+        try {
+            Connect.startTransaction();
+            GitCommit lastCommit = importCommit(allCommit.get(allCommit.size() - 1));
+            gitUtil.checkoutCommit(lastCommit.getHash_val());
+            String sonarID = repoName + "_" + branchName + "_" + lastCommit.getHash_val();
+            SonarScanner.ScanRepo(path, sonarID);
+            SonarResultParser parser = new SonarResultParser();
+            Thread.sleep(5000);
+            parser.getSonarResult(repoName, branchName, lastCommit.getHash_val());
+            preRawIssues = parser.getResultRawIssues();
+            for (RawIssue issue : preRawIssues) {
+                Integer caseId = IssueCaseCRUD.insertIssueCase(lastCommit.getCommit_id(), SonarString2CaseType(issue.getType()));
+                preIssuesInstance.add(importIssueInstance(caseId, lastCommit, issue, APPEAR));
+            }
+            Connect.commit();
+        } catch (Exception e){
+            e.printStackTrace();
+            Connect.rollBack();
+            return;
         }
 
-        for(int i = allCommit.size() - 3; i >= 0; i--){
+        for(int i = allCommit.size() - 2; i >= 0; i--){
             HashMap<CommitProperty, Object> commitInfo = allCommit.get(i);
             GitCommit commit = importCommit(commitInfo);
             gitUtil.checkoutCommit(commit.getHash_val());
@@ -97,37 +114,45 @@ public class RepoImport {
             SonarScanner.ScanRepo(path, id);
             SonarResultParser parser1 = new SonarResultParser();
             List<IssueInstance> curIssuesInstance = new ArrayList<>();
-
+            Thread.sleep(5000);
             parser1.getSonarResult(repoName, branchName, commit.getHash_val());
             List<RawIssue> curRawIssues = parser1.getResultRawIssues();
-            System.out.println("size" + curRawIssues.size());
+            //System.out.println("size" + curRawIssues.size());
             IssueMatcher.match(preRawIssues, curRawIssues, path);
-            for(int j = 0; j < curRawIssues.size(); j++){
-                RawIssue issue = curRawIssues.get(j);
-                if(!issue.isMapped()){
-                    Integer caseId = IssueCaseCRUD.insertIssueCase(commit.getCommit_id(), SonarString2CaseType(issue.getType()));
-                    System.out.println("appear" + caseId);
-                    curIssuesInstance.add(importIssueInstance(caseId, commit, issue, APPEAR));
-                } else {
-                    RawIssue mappedIssue = issue.getMappedRawIssue();
-                    IssueInstance mappedIssueInstance = preIssuesInstance.get(preRawIssues.indexOf(mappedIssue));
-                    if(compareRawIssue(issue, mappedIssue)){
-                        System.out.println("keep" + mappedIssueInstance.getIssue_case_id());
-                        curIssuesInstance.add(mappedIssueInstance);
+            try {
+                Connect.startTransaction();
+                for (int j = 0; j < curRawIssues.size(); j++) {
+                    RawIssue issue = curRawIssues.get(j);
+                    if (!issue.isMapped()) {
+                        Integer caseId = IssueCaseCRUD.insertIssueCase(commit.getCommit_id(), SonarString2CaseType(issue.getType()));
+                        System.out.println("appear issueCase: (id) -- " + caseId);
+                        curIssuesInstance.add(importIssueInstance(caseId, commit, issue, APPEAR));
                     } else {
-                        System.out.println("update" + mappedIssueInstance.getIssue_case_id());
-                        curIssuesInstance.add(importIssueInstance(mappedIssueInstance.getIssue_case_id(), commit, issue, UPDATE));
+                        RawIssue mappedIssue = issue.getMappedRawIssue();
+                        IssueInstance mappedIssueInstance = preIssuesInstance.get(preRawIssues.indexOf(mappedIssue));
+                        if (compareRawIssue(issue, mappedIssue)) {
+                            System.out.println("keep issueCase: (id) -- " + mappedIssueInstance.getIssue_case_id());
+                            curIssuesInstance.add(mappedIssueInstance);
+                        } else {
+                            System.out.println("update issueCase: (id) -- " + mappedIssueInstance.getIssue_case_id());
+                            curIssuesInstance.add(importIssueInstance(mappedIssueInstance.getIssue_case_id(), commit, issue, UPDATE));
+                        }
                     }
                 }
-            }
-            for(int j = 0; j < preRawIssues.size(); j++){
-                RawIssue issue = preRawIssues.get(j);
-                if(!issue.isMapped()){
-                    IssueInstance thisInstance = preIssuesInstance.get(j);
-                    System.out.println("disappear" + thisInstance.getIssue_case_id());
-                    curIssuesInstance.add(importIssueInstance(thisInstance.getIssue_case_id(), commit, issue, DISAPPEAR));
-                    IssueCaseCRUD.solveIssueCase(thisInstance.getIssue_case_id(), commit.getCommit_id());
+                for (int j = 0; j < preRawIssues.size(); j++) {
+                    RawIssue issue = preRawIssues.get(j);
+                    if (!issue.isMapped()) {
+                        IssueInstance thisInstance = preIssuesInstance.get(j);
+                        System.out.println("disappear issueCase: (id) -- " + thisInstance.getIssue_case_id());
+                        curIssuesInstance.add(importIssueInstance(thisInstance.getIssue_case_id(), commit, issue, DISAPPEAR));
+                        IssueCaseCRUD.solveIssueCase(thisInstance.getIssue_case_id(), commit.getCommit_id());
+                    }
                 }
+                Connect.commit();
+            } catch (Exception e){
+                e.printStackTrace();
+                Connect.rollBack();
+                return;
             }
             for(RawIssue rawIssue : curRawIssues){
                 rawIssue.resetMappedInfo();
