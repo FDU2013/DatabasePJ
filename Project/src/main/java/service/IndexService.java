@@ -24,11 +24,11 @@ public class IndexService {
         switch (use){
             case "y":
                 compareCommitService(true);
-                compareTimeService(true);
+//                compareTimeService(true);
                 break;
             case "n":
                 compareCommitService(false);
-                compareTimeService(false);
+//                compareTimeService(false);
                 break;
         }
     }

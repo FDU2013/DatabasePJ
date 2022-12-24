@@ -18,7 +18,7 @@ import java.util.List;
 public class SonarResultParser {
 
     private static final String SEARCH_API_URL = "http://127.0.0.1:9000/api/issues/search";
-    private static final String AUTHORIZATION = "Basic YWRtaW46MTIzNA==";
+    private static final String AUTHORIZATION = "Basic YWRtaW46emp4emp4";
 
     private List<RawIssue> resultRawIssues;
 
