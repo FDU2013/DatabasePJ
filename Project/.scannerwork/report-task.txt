@@ -1,6 +1,0 @@
-projectKey=sshlab_refs-heads-master_a5c30bc8686b3ea4d6146fab56490251acbda831
-serverUrl=http://localhost:9000
-serverVersion=9.7.1.62043
-dashboardUrl=http://localhost:9000/dashboard?id=sshlab_refs-heads-master_a5c30bc8686b3ea4d6146fab56490251acbda831
-ceTaskId=AYTnCC_QBxoUlSXfSOK7
-ceTaskUrl=http://localhost:9000/api/ce/task?id=AYTnCC_QBxoUlSXfSOK7
