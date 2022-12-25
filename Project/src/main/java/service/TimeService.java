@@ -104,7 +104,7 @@ public class TimeService {
                 System.out.println("--这段时间内消除的缺陷的信息：");
                 PrintSolvedInstanceDetail(solve_list);
                 break;
-            default:return;
+            default:break;
         }
         System.out.println("-----------------------------------------");
         System.out.println("程序非IO耗费时间：" + (endTime - startTime) + "ms");
