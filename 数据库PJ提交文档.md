@@ -2,47 +2,98 @@
 
 ### 1.数据库ER图
 
-![ER图.jpg](https://s2.loli.net/2022/12/24/fFgTQXKOBuAkUn5.jpg)
+![ER图.jpg](https://s2.loli.net/2022/12/25/x4Tf9aIUBzqPRQm.jpg)
 
 #### 特殊设计注明
 
 ##### ①隔离
 
-不仅仅是每个仓库互不相干，每个分支之间也互不相干，如果分支之间有相同的**commit**，会重复扫描匹配入库，从ER图可以看出，我们设计时把**commit**和**branch**设计为多对一，其实就体现了隔离性，这里其实是为增量做了一点铺垫，不同分支虽然有相同**commit**，但是增量变化情况是可能不一样的。
+不仅仅是每个仓库互不相干，每个分支之间也互不相干，如果分支之间有相同的**commit**，会重复扫描匹配入库，从ER图可以看出，我们设计时把**commit**和**branch**设计为**多对一**，其实就体现了隔离性，这里其实是为增量做了一点铺垫，不同分支虽然有相同**commit**，但是增量变化情况是可能不一样的。
 
 ##### ②增量
 
 数据入库时，除了第一个**commit**会把所有扫描结果全部入库，其他**commit**会把扫描结果和上一个**commit**进行对比。从而得到本次**commit**的所有**issue_instance**
 
-根据匹配的情况，一共有**APPEAR**、**UPDATE**、**DISAPPEAR**三种情况
+根据匹配的情况，**issue_instance**一共有**APPEAR**、**UPDATE**、**DISAPPEAR**三种情况
 
-##### ③为什么issue_case和issue_instance不是均为全参与
+##### ③没有在数据库层面维护commit的前后版本关系
 
-
-
-##### ④没有在数据库层面维护commit的前后版本关系
-
-而是在应用层按时间排序得到某个**branch**的所有**commit**的前后关系
+我们的ER模型中并没有定义一个**parent/child**关系来刻画**commit**的前后版本关系。而是在应用层按时间排序得到某个**branch**的所有**commit**的前后关系。
 
 ### 2.数据库表结构
 
-参见**/sqlfile/create_table.sql**
+不带注释且每一句sql语句挤在一行的版本参见**/sqlfile/create_table.sql**
 
-为了便于
+下面是美化格式后的建表语句，和ER图重复的部分不再注释
+
+```sql
+CREATE TABLE IF NOT EXISTS repository (
+    repository_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(30) NOT NULL,
+    description VARCHAR(100) NOT NULL,
+    url VARCHAR(200) NOT NULL
+);
+CREATE TABLE IF NOT EXISTS branch (
+    branch_id INT PRIMARY KEY AUTO_INCREMENT,
+    repository_id INT(100) NOT NULL, //体现了ER图中的Has关系，一对多，在多端维护一个外键
+    name VARCHAR(30) NOT NULL,
+    description VARCHAR(100) NOT NULL,
+    foreign key(repository_id) references repository(repository_id) 
+);
+CREATE TABLE IF NOT EXISTS git_commit (
+    branch_id INT NOT NULL,  //体现了ER图中的belong_to关系，一对多，在多端维护一个外键
+    commit_id INT PRIMARY KEY AUTO_INCREMENT,
+    hash_val VARCHAR(100) NOT NULL,
+    commit_time DATETIME NOT NULL,
+    committer VARCHAR(50) NOT NULL,
+    foreign key(branch_id) references branch(branch_id), 
+    INDEX commit_index_on_time (commit_time)   //索引，加快按时间查找commit的速度
+);
+CREATE TABLE IF NOT EXISTS issue_case (
+    issue_case_id INT PRIMARY KEY AUTO_INCREMENT,
+    appear_commit_id INT,                      //体现了ER图中的appear关系，一对多，在多端维护一个外键
+    solve_commit_id INT,                       //体现了ER图中的solve_in关系，一对多，在多端维护一个外键
+    case_status ENUM ('SOLVED','UNSOLVED'),
+    type ENUM ('BUG','SMELL','VULN','SECHOT'),
+    appear_time DATETIME,                      //冗余设计，为了便于业务实现
+    appear_committer VARCHAR(50),              //冗余设计，为了便于业务实现
+    solve_time DATETIME,                       //冗余设计，为了便于业务实现
+    solve_committer VARCHAR(50),               //冗余设计，为了便于业务实现
+    foreign key(appear_commit_id) references git_commit(commit_id),
+    foreign key(solve_commit_id) references git_commit(commit_id),
+    INDEX case_index_on_appear_id (appear_commit_id),  //索引，加快按出现commit查找缺陷的速度
+    INDEX case_index_on_solve_id (solve_commit_id)     //索引，加快按解决commit查找缺陷的速度
+);
+CREATE TABLE IF NOT EXISTS issue_instance (
+    issue_instance_id INT PRIMARY KEY AUTO_INCREMENT,
+    issue_case_id INT,                       //体现了ER图中的about关系，一对多，在多端维护一个外键
+    commit_id INT(20),                       //体现了ER图中的detect_in关系，一对多，在多端维护一个外键
+    instance_status ENUM ('APPEAR','UPDATE','DISAPPEAR'),
+    file_path VARCHAR(200) NOT NULL,
+    message VARCHAR(300),
+    foreign key(issue_case_id) references issue_case(issue_case_id),
+    foreign key(commit_id) references git_commit(commit_id),
+    INDEX instance_index_on_commit_id (commit_id)  
+);
+CREATE TABLE IF NOT EXISTS issue_location (
+    issue_instance_id INT,                    //弱实体集中要记录其从属的实体集的主键
+    sequence INT,start_line INT NOT NULL,
+    end_line INT NOT NULL,
+    primary key(issue_instance_id,sequence),  //弱实体集的主键应该是其从属的实体集的主键加上其序号
+    foreign key(issue_instance_id) references issue_instance(issue_instance_id) 
+);
+
+```
 
 #### 特殊设计注明
 
-①冗余
+##### ①冗余
 
-
-
-
-
-
+在**issue_case**表中，我们额外存储了四个信息：出现时间、引入者、解决时间、解决者。这些信息本来是可以通过**appear_commit_id**和**solve_commit_id**找到的对应的commit然后获取到的，但是这额外的一步会比较麻烦，需要使用**join**，降低性能，而且涉及的也是核心功能，所以为了业务实现的高效和便捷，设计了这里的冗余。
 
 ### 3.需求分析
 
-具体参见需求文档，这里简单说明有哪些功能
+具体参见**需求文档**，这里简单说明有哪些功能
 
 
 
