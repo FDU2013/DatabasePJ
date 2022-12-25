@@ -133,7 +133,7 @@ try{
 
 #### 6.2 存储能力分析
 
-我们的项目中给出了一个==demo==仓库，扫描完这个仓库最后单表的数据量最大为==xxx==
+我们的项目中给出了一个github里找的仓库，单扫描完这个仓库最后单表的数据量最大为68891(是issueInstance，与此同时issueCase有33434)。
 
 #### 6.3 查询性能分析（已使用索引优化）
 
@@ -174,6 +174,14 @@ try{
 然后进行对比，我们写了一个**IndexService**模拟对应的业务，不打印输出，尽量只运行数据库的sql语句，然后分别对比使用和不使用索引消耗的时间。
 
 我们在代码中模拟**CommitService**和**TimeService**中的行为，分别使用和不使用索引，对比性能
+
+**CommitService**：
+
+<a href="https://sm.ms/image/5sgHJAxWLz3yctF" target="_blank"><img src="https://s2.loli.net/2022/12/25/5sgHJAxWLz3yctF.png" height= 350px></a><a href="https://sm.ms/image/Qi9uvK47k2drgcE" target="_blank"><img src="https://s2.loli.net/2022/12/25/Qi9uvK47k2drgcE.png" height = 350px></a>
+
+440ms VS 4193ms，可见，使用索引所花费时间约是不使用索引花费时间的十分之一，效果十分好。（数据的数量级为10^4。）
+
+**TimeService**:
 
 ==这里需要运行4次截图4张==
 

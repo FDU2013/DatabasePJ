@@ -23,12 +23,12 @@ public class IndexService {
         String use = s.nextLine();
         switch (use){
             case "y":
-                compareCommitService(true);
-//                compareTimeService(true);
+//                compareCommitService(true);
+                compareTimeService(true);
                 break;
             case "n":
-                compareCommitService(false);
-//                compareTimeService(false);
+//                compareCommitService(false);
+                compareTimeService(false);
                 break;
         }
     }

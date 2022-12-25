@@ -49,8 +49,6 @@ public class RepoImport {
     public void importAllBranch(){
         List<String> allBranch = gitUtil.getAllBranch();
         for(String branch : allBranch) {
-           // Integer id =
-            //System.out.println(importBranch(branch));
             curBranchId = importBranch(branch);
             try {
                 importAllCommitAndIssue(branch);
@@ -58,8 +56,6 @@ public class RepoImport {
                 e.printStackTrace();
                 break;
             }
-            //TODO sds
-            //if(branch.equals("refs/heads/master")) curBranchId = id;
         }
     }
 
@@ -108,18 +104,20 @@ public class RepoImport {
 
         for(int i = allCommit.size() - 2; i >= 0; i--){
             HashMap<CommitProperty, Object> commitInfo = allCommit.get(i);
-            GitCommit commit = importCommit(commitInfo);
-            gitUtil.checkoutCommit(commit.getHash_val());
-            String id = repoName + "_" + branchName + "_" + commit.getHash_val();
-            SonarScanner.ScanRepo(path, id);
-            SonarResultParser parser1 = new SonarResultParser();
             List<IssueInstance> curIssuesInstance = new ArrayList<>();
-            Thread.sleep(5000);
-            parser1.getSonarResult(repoName, branchName, commit.getHash_val());
-            List<RawIssue> curRawIssues = parser1.getResultRawIssues();
-            //System.out.println("size" + curRawIssues.size());
-            IssueMatcher.match(preRawIssues, curRawIssues, path);
+            List<RawIssue> curRawIssues;
             try {
+                GitCommit commit = importCommit(commitInfo);
+                gitUtil.checkoutCommit(commit.getHash_val());
+                String id = repoName + "_" + branchName + "_" + commit.getHash_val();
+                SonarScanner.ScanRepo(path, id);
+                SonarResultParser parser1 = new SonarResultParser();
+
+                Thread.sleep(5000);
+                parser1.getSonarResult(repoName, branchName, commit.getHash_val());
+                curRawIssues = parser1.getResultRawIssues();
+                //System.out.println("size" + curRawIssues.size());
+                IssueMatcher.match(preRawIssues, curRawIssues, path);
                 Connect.startTransaction();
                 for (int j = 0; j < curRawIssues.size(); j++) {
                     RawIssue issue = curRawIssues.get(j);
@@ -206,13 +204,13 @@ public class RepoImport {
 
 
     public static <T> boolean listValEquals(List<T> t1, List<T> t2) {
-        if (t1 == t2) { // 为空or引用地址一致时
+        if (t1 == t2) { // 为空or引用地址一致
             return true;
-        } else if (t1.size() != t2.size()) { // 数量一致, 过滤掉了list1中有{1,1,3},list2中有{1,3,4}的场景
+        } else if (t1.size() != t2.size()) {
             return false;
         }
         for (T t : t1) {
-            if (!t2.contains(t)) { // equals比较
+            if (!t2.contains(t)) {
                 return false;
             }
         }
