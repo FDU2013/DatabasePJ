@@ -15,7 +15,7 @@ public class CreateTable {
 
     public static void createTable(){
         try{
-            runSqlByReadFileContent(URL_BASE+"src/main/resources/sqlfile/create_table.sql", "UTF-8");
+            runSqlByReadFileContent(URL_BASE+"sqlfile/create_table.sql", "UTF-8");
         } catch (Exception e){
             System.out.println("create table fail!");
             return;
