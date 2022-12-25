@@ -105,6 +105,9 @@ public class CommitService {
 
     private static void calDetailList() throws Exception{
         //先拿到所有的commit
+        long startTime = System.currentTimeMillis();
+
+
         List<GitCommit> commits = GitCommitCRUD.getAllCommitUntilOneCommit(gitCommit);
         commits.sort(new GitCommitTimeComparator());
         TreeMap<Integer, ExtendedInstance> map = new TreeMap<>();
@@ -145,7 +148,11 @@ public class CommitService {
         }
         List<ExtendedInstance> existingInstances = new ArrayList<>(map.values());
         map.clear();
+        long endTime = System.currentTimeMillis();
         PrintExistingIssueByTypeOrderByTime(existingInstances,true);
+        System.out.println("-----------------------------------------");
+        System.out.println("程序非IO耗费时间：" + (endTime - startTime) + "ms");
+        System.out.println("-----------------------------------------");
     }
 
 

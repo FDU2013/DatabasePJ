@@ -19,16 +19,22 @@ public class IndexService {
     public static void compare(){
         if(!BranchView.isValid())return;
         Scanner s = new Scanner(System.in);
+        System.out.println("模拟CommitService还是TimeService?(c/t)");
+        String ser = s.nextLine();
         System.out.println("是否使用索引?(y/n)");
         String use = s.nextLine();
         switch (use){
             case "y":
-                compareCommitService(true);
-//                compareTimeService(true);
+                if(ser.equals("c"))
+                    compareCommitService(true);
+                if(ser.equals("t"))
+                    compareTimeService(true);
                 break;
             case "n":
-                compareCommitService(false);
-//                compareTimeService(false);
+                if(ser.equals("c"))
+                    compareCommitService(false);
+                if(ser.equals("t"))
+                    compareTimeService(false);
                 break;
         }
     }
@@ -85,6 +91,13 @@ public class IndexService {
     }
     private static Timestamp start_time, end_time;
     public static void compareTimeService(boolean use_index){
+        if (use_index) {
+            System.out.println("------------------------------------");
+            System.out.println("现在使用索引，模拟TimeService，查看某时间段内缺陷的引入和消除情况");
+        }else {
+            System.out.println("------------------------------------");
+            System.out.println("现在禁用索引，模拟TimeService，查看某时间段内缺陷的引入和消除情况");
+        }
         try {
             Step1DecideTime();
             List<GitCommit> commits = GitCommitCRUD.getAllCommitBetween(start_time,end_time,true);
@@ -96,8 +109,9 @@ public class IndexService {
             System.out.printf("这段时间内有 %d 个commit\n",commits.size());
             Step2CalChange(commits,use_index);
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
+        System.out.println("------------------------------------");
     }
     private static void Step1DecideTime()throws Exception{
         Scanner s = new Scanner(System.in);
@@ -110,11 +124,13 @@ public class IndexService {
     }
 
     private static void Step2CalChange(List<GitCommit> commits, boolean use_index) throws Exception {
+        long startTime = System.currentTimeMillis();
         for(GitCommit commit:commits){
             //逐个考虑commit，把每个commit的所有issue_instance拿出来
             List<ExtendedInstance> extendedInstances = IssueInstanceCRUD.getAllExtendedInstanceByCommitIdNoCache(commit.getCommit_id(),use_index);
         }
-
+        long endTime = System.currentTimeMillis();
+        System.out.println("程序查询数据库耗费时间时间：" + (endTime - startTime) + "ms");
     }
 
 

@@ -23,26 +23,46 @@ public class CommitterService {
         try {
             System.out.println("---------------------");
             System.out.println("--自己引入自己解决的缺陷：");
+            long startTime = System.currentTimeMillis();
             List<IssueCase> self_produce_self_solve = IssueCaseCRUD.getSelfProducedAndSelfSolvedIssueCaseByCommitter(committer);
+            long endTime = System.currentTimeMillis();
             PrintSolvedDetail(self_produce_self_solve);
+            System.out.println("-----------------------------------------");
+            System.out.println("程序非IO耗费时间：" + (endTime - startTime) + "ms");
+            System.out.println("-----------------------------------------");
             if(!WaitForContinue())return;
 
             System.out.println("---------------------");
             System.out.println("--自己引入他人解决的缺陷：");
+            startTime = System.currentTimeMillis();
             List<IssueCase> self_produce_others_solve = IssueCaseCRUD.getSelfProducedAndOthersSolvedIssueCaseByCommitter(committer);
+            endTime = System.currentTimeMillis();
             PrintSolvedDetail(self_produce_others_solve);
+            System.out.println("-----------------------------------------");
+            System.out.println("程序非IO耗费时间：" + (endTime - startTime) + "ms");
+            System.out.println("-----------------------------------------");
             if(!WaitForContinue())return;
 
             System.out.println("---------------------");
             System.out.println("--他人引入自己解决的缺陷：");
+            startTime = System.currentTimeMillis();
             List<IssueCase> others_produce_self_solve = IssueCaseCRUD.getOthersProducedAndSelfSolvedIssueCaseByCommitter(committer);
+            endTime = System.currentTimeMillis();
             PrintSolvedDetail(others_produce_self_solve);
+            System.out.println("-----------------------------------------");
+            System.out.println("程序非IO耗费时间：" + (endTime - startTime) + "ms");
+            System.out.println("-----------------------------------------");
             if(!WaitForContinue())return;
 
             System.out.println("---------------------");
             System.out.println("--自己引入还未解决的缺陷：");
+            startTime = System.currentTimeMillis();
             List<IssueCase> self_produce_not_solve = IssueCaseCRUD.getSelfProducedAndNotSolvedIssueCaseByCommitter(committer);
+            endTime = System.currentTimeMillis();
             PrintNotSolvedDetail(self_produce_not_solve);
+            System.out.println("-----------------------------------------");
+            System.out.println("程序非IO耗费时间：" + (endTime - startTime) + "ms");
+            System.out.println("-----------------------------------------");
 
         }catch (Exception e){
             e.printStackTrace();

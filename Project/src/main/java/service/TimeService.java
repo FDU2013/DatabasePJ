@@ -47,6 +47,9 @@ public class TimeService {
     }
 
     private static void Step2CalChange(List<GitCommit> commits) throws Exception {
+        long startTime = System.currentTimeMillis();
+
+
         Scanner s = new Scanner(System.in);
         TreeMap<Integer, ExtendedInstance> appear_map = new TreeMap<>();
         List<ExtendedInstance> solve_list = new ArrayList<>();
@@ -74,6 +77,11 @@ public class TimeService {
                 }
             }
         }
+
+        long endTime = System.currentTimeMillis();
+
+
+
         List<ExtendedInstance> appear_list = new ArrayList<>(appear_map.values());
         appear = appear_list.size();
         System.out.println("--------------------");
@@ -98,6 +106,10 @@ public class TimeService {
                 break;
             default:return;
         }
+        System.out.println("-----------------------------------------");
+        System.out.println("程序非IO耗费时间：" + (endTime - startTime) + "ms");
+        System.out.println("-----------------------------------------");
+
     }
 
     private static void PrintNewInstanceDetail(List<ExtendedInstance> appear_list) {
