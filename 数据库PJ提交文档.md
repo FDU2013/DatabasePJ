@@ -123,7 +123,9 @@ PS：业务处理过程中还会顺便计算一些统计信息，比如存续时
 
 ### 4.程序源码和可执行文件
 
+源码参见**Project**文件夹，可以直接打开为**IDEA**项目
 
+可执行文件为
 
 ### 5.测试数据准备说明
 
@@ -137,39 +139,50 @@ PS：业务处理过程中还会顺便计算一些统计信息，比如存续时
 
 #### 6.1事务
 
-我们在导入每个commit的扫描结果的时候会开启事务，等这个commit的所有扫描结果都执行入库的sql语句后再commit
+主要是在导入时可以使用事务，大致可以分两种思路
 
-我们在Connect类中封装了和数据库的连接（即JDBC中的Connection类的实体，主要目的是把它变成一个全局变量，方便各个地方使用），把事务的开启、提交、回滚进行了简单封装。
+①在导入每个commit的扫描结果的时候会开启事务，等这个commit的所有扫描结果都执行入库的sql语句后再commit
+
+②把这个仓库(or分支)的整个扫描过程看作一个事务
+
+我们在Connect类中封装了和数据库的连接（即JDBC中的Connection类的实体，主要目的是把它变成一个全局变量，方便各个地方使用），把事务的**开启**、**提交**、**回滚**进行了简单封装,并在导入数据的时候使用。
 
 ```Java
-try{
-    Connect.startTransaction();
-    //入库
-    Connect.commit();
-}catch(Exception e){
-    e.printStackTrace();
-    Connect.rollBack();
+public static void startTransaction() throws SQLException {
+    connection.setAutoCommit(false);
 }
 
+public static void commit() throws SQLException {
+    connection.commit();
+    connection.setAutoCommit(true);
+}
+public static void rollBack(){
+    try {
+        connection.rollback();
+        connection.setAutoCommit(true);
+    } catch (Exception e){
+        //...
+    }
+}
 ```
 
 #### 6.2 存储能力分析
 
-我们的项目中给出了一个github里找的仓库，单扫描完这个仓库最后单表的数据量最大为68891(是issueInstance，与此同时issueCase有33434)。
+我们的项目中给出了一个github里找的仓库，单扫描完这个仓库最后单表的数据量最大为**68891**条数据(是**issueInstance**，与此同时**issueCase**表中有**33434**条记录)。
 
 #### 6.3 查询性能分析（已使用索引优化）
 
 ##### 6.3.1 针对各个业务的第一次运行的性能分析
 
-**commit**:
+**CommitService**: 从下图可以看出，非IO耗时为 493ms，主要是读取数据库耗时。(后面对使用和不使用索引进行比较的时候，去掉了一些应用层计算，只保留读取数据库，耗时为440ms)
 
 <a href="https://sm.ms/image/NEojVKk1Pf8mbtl" target="_blank"><img src="https://s2.loli.net/2022/12/25/NEojVKk1Pf8mbtl.png" height = 400px></a>
 
-**time**:
+**TimeService**: 从下图可以看出，非IO耗时为 418ms，主要是读取数据库耗时(后面对使用和不使用索引进行比较的时候，去掉了一些应用层计算，只保留读取数据库，耗时为333ms)
 
-<a href="https://sm.ms/image/h9QNbB6kKay1dxL" target="_blank"><img src="https://s2.loli.net/2022/12/25/h9QNbB6kKay1dxL.png" height = 400px></a>
+<a href="https://sm.ms/image/h9QNbB6kKay1dxL" target="_blank"><img src="https://s2.loli.net/2022/12/25/h9QNbB6kKay1dxL.png" height = 400px style="zoom: 150%;" ></a>
 
-**committer**:
+**CommitterService**: 从下图可以看出，非IO耗时为 187ms。标红的地方主要是体现了对应的缺陷需要**按照存续时长排序**。
 
 <a href="https://sm.ms/image/HTnPUYXOMV8s1AI" target="_blank"><img src="https://s2.loli.net/2022/12/25/HTnPUYXOMV8s1AI.png" height=400px></a>
 
@@ -177,15 +190,19 @@ try{
 
 查阅资料发现，MySQL有两个类似缓存的机制：缓冲池和查询缓存（Query Cache），其中后者在MySQL 8.0以上版本已经不再使用了，但是缓冲池还是在的，它会起到类似缓存的效果，当我们短期重复查询时，速度会加快，下面是一组简单的对比：
 
-第一次
+重启进程，第一次运行 CommitService，查看最新的commit的缺陷引入、消除和累积情况
 
-第二次
+<img src="https://s2.loli.net/2022/12/25/SzyqGab9tCVspDx.png" alt="第一次运行.png" style="zoom:50%;" />
 
-第三次
+第二次运行 CommitService，查看最新的commit的缺陷引入、消除和累积情况
 
+<img src="https://s2.loli.net/2022/12/25/zEdIfWYoMw5clRV.png" alt="第二次运行.png" style="zoom:50%;" />
 
+第三次运行 CommitService，查看最新的commit的缺陷引入、消除和累积情况
 
+<img src="https://s2.loli.net/2022/12/25/oPF7WwnI1ChaOSA.png" alt="第三次运行.png" style="zoom:50%;" />
 
+结论：MySQL缓冲池机制会优化重复查询的性能。并且多次运行会把优化加速比提升得更高。
 
 
 
@@ -207,7 +224,7 @@ try{
 
 **CommitService**：
 
-<a href="https://sm.ms/image/5sgHJAxWLz3yctF" target="_blank"><img src="https://s2.loli.net/2022/12/25/5sgHJAxWLz3yctF.png" height= 350px></a><a href="https://sm.ms/image/Qi9uvK47k2drgcE" target="_blank"><img src="https://s2.loli.net/2022/12/25/Qi9uvK47k2drgcE.png" height = 350px></a>
+<a href="https://sm.ms/image/5sgHJAxWLz3yctF" target="_blank"><img src="https://s2.loli.net/2022/12/25/5sgHJAxWLz3yctF.png" height= 350px style="zoom:150%;" ></a><a href="https://sm.ms/image/Qi9uvK47k2drgcE" target="_blank"><img src="https://s2.loli.net/2022/12/25/Qi9uvK47k2drgcE.png" height = 350px style="zoom:150%;" ></a>
 
 440ms VS 4193ms，可见，使用索引所花费时间约是不使用索引花费时间的十分之一，效果十分好。
 
@@ -219,19 +236,7 @@ try{
 
 333ms VS 4352ms，可见，使用索引所花费时间约是不使用索引花费时间的1/14，效果十分好。
 
-==这里需要运行4次截图4张==
 
-==先直接运行，导入完成后输入index,然后输入n，运行结果截图==
-
-==注意，**一定要结束进程后重新运行**，可以适当等半分钟再运行，主要是避免数据库的缓存机制影响结果！输入index,然后输入y，运行结果截图==
-
-==注意，**一定要结束进程后重新运行**，可以适当等半分钟再运行，主要是避免数据库的缓存机制影响结果！输入index,然后输入y，运行结果截图==
-
-==然后把IndexService的第27和31行放出来，注释掉26,30，重复上述过程==
-
-
-
-#### 6.4是否可以优化SQL语句的写法
 
 
 
