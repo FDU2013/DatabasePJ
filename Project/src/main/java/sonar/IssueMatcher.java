@@ -29,7 +29,7 @@ public class IssueMatcher {
                 name = parts[parts.length - 1];
                 if(name.equals("java"))
                     //System.out.println(f.getName());
-                    res.addAll(AstParserUtil.getMethodsAndFieldsInFile(f.getAbsolutePath()));
+                    res.addAll(AstParserUtil.getMethodsAndFieldsInFile(f.getAbsolutePath())) ;
                 }
             }
 

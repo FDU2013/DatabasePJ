@@ -18,7 +18,7 @@ import java.util.List;
 public class SonarResultParser {
 
     private static final String SEARCH_API_URL = "http://127.0.0.1:9000/api/issues/search";
-    private static final String AUTHORIZATION = "Basic YWRtaW46emp4emp4";
+    private static final String AUTHORIZATION = "Basic YWRtaW46MTIzNA==";
 
     private List<RawIssue> resultRawIssues;
 
@@ -41,7 +41,7 @@ public class SonarResultParser {
     }
 
     private static JSONObject getSonarIssueResults(String id, int page) throws IOException {
-        URL url = new URL(SEARCH_API_URL + "?componentKeys=" + id + "&p=" + page);
+        URL url = new URL(SEARCH_API_URL + "?componentKeys=" + id + "&additionalFields=_all&s=FILE_LINE&resolved=false&p=" + page);
         //System.out.println(SEARCH_API_URL + "?componentKeys=" + id + "&p=" + page);
         URLConnection connection = url.openConnection();
         connection.setConnectTimeout(10000);

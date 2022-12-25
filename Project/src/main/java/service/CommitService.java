@@ -127,13 +127,13 @@ public class CommitService {
                             System.out.println("case_instance: "+instance.getIssue_instance_id());
                         }
                         assert !delete_set.contains(instance.getIssue_case_id());
-                        try{
-                            map.get(instance.getIssue_case_id()).setLatest_instance_id(instance.getIssue_instance_id());
-                        }catch (Exception e){
-                            System.out.println("case_id: "+instance.getIssue_case_id());
-                            System.out.println("case_instance: "+instance.getIssue_instance_id());
-                            throw new Exception();
-                        }
+//                        try{
+//                            map.get(instance.getIssue_case_id()).setLatest_instance_id(instance.getIssue_instance_id());
+//                        }catch (Exception e){
+//                            System.out.println("case_id: "+instance.getIssue_case_id());
+//                            System.out.println("case_instance: "+instance.getIssue_instance_id());
+//                            throw new Exception();
+//                        }
                         //map.get(instance.getIssue_case_id()).setLatest_instance_id(instance.getIssue_instance_id());
                         break;
                     case DISAPPEAR:

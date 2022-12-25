@@ -127,13 +127,11 @@ PS：业务处理过程中还会顺便计算一些统计信息，比如存续时
 
 ### 5.测试数据准备说明
 
-==@ytq==
+准备了两个仓。
 
+一个是自己准备的，数据量较小，仅有百条issue，不到10个commit，两个分支。主要用于实现基本功能时进行测试，并且由于其体量小，导入速度快，故用于测试多分支的导入。（SonarTest）
 
-
-
-
-
+一个是Github上的开源仓库，其数据量大，有10^4量级的issue，300多个commit，4个分支。用于最终系统级功能的测试。
 
 ### 6.对系统级功能的尝试
 
@@ -163,9 +161,17 @@ try{
 
 ##### 6.3.1 针对各个业务的第一次运行的性能分析
 
+**commit**:
 
+<a href="https://sm.ms/image/NEojVKk1Pf8mbtl" target="_blank"><img src="https://s2.loli.net/2022/12/25/NEojVKk1Pf8mbtl.png" height = 400px></a>
 
+**time**:
 
+<a href="https://sm.ms/image/h9QNbB6kKay1dxL" target="_blank"><img src="https://s2.loli.net/2022/12/25/h9QNbB6kKay1dxL.png" height = 400px></a>
+
+**committer**:
+
+<a href="https://sm.ms/image/HTnPUYXOMV8s1AI" target="_blank"><img src="https://s2.loli.net/2022/12/25/HTnPUYXOMV8s1AI.png" height=400px></a>
 
 ##### 6.3.2 数据库缓冲机制优化重复查询
 
@@ -203,9 +209,15 @@ try{
 
 <a href="https://sm.ms/image/5sgHJAxWLz3yctF" target="_blank"><img src="https://s2.loli.net/2022/12/25/5sgHJAxWLz3yctF.png" height= 350px></a><a href="https://sm.ms/image/Qi9uvK47k2drgcE" target="_blank"><img src="https://s2.loli.net/2022/12/25/Qi9uvK47k2drgcE.png" height = 350px></a>
 
-440ms VS 4193ms，可见，使用索引所花费时间约是不使用索引花费时间的十分之一，效果十分好。（数据的数量级为10^4。）
+440ms VS 4193ms，可见，使用索引所花费时间约是不使用索引花费时间的十分之一，效果十分好。
 
 **TimeService**:
+
+<a href="https://sm.ms/image/gfmcxoAlbN4rdB2" target="_blank"><img src="https://s2.loli.net/2022/12/25/gfmcxoAlbN4rdB2.png" height= 400px></a>
+
+<a href="https://sm.ms/image/xRUBIgilaO7LNvJ" target="_blank"><img src="https://s2.loli.net/2022/12/25/xRUBIgilaO7LNvJ.png" height=400px></a>
+
+333ms VS 4352ms，可见，使用索引所花费时间约是不使用索引花费时间的1/14，效果十分好。
 
 ==这里需要运行4次截图4张==
 
