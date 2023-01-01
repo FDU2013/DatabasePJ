@@ -12,15 +12,24 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
-
 
 public class SonarResultParser {
 
     private static final String SEARCH_API_URL = "http://127.0.0.1:9000/api/issues/search";
-    private static final String AUTHORIZATION = "Basic YWRtaW46MTIzNA==";
+
+    public static String getAUTHORIZATION() {
+        return AUTHORIZATION;
+    }
+
+    private static String AUTHORIZATION;
 
     private List<RawIssue> resultRawIssues;
+
+    public static void initParser(String account, String password){
+        AUTHORIZATION = "Basic " + Base64.getUrlEncoder().encodeToString((account + ":" + password).getBytes());
+    }
 
     public  SonarResultParser(){
         resultRawIssues = new ArrayList<>();
@@ -30,15 +39,17 @@ public class SonarResultParser {
         return resultRawIssues;
     }
 
-    public static void main(String[] args) {
-        //test:
-        try {
-            JSONObject json = getSonarIssueResults("fg_main_b8024d988226df0b529a7566d905f4e67ee3aa31", 1 );
-            System.out.println(json.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void main(String[] args) {
+//        //test:
+//        initParser("admin", "1234");
+//        System.out.println(AUTHORIZATION);
+////        try {
+////            JSONObject json = getSonarIssueResults("fg_main_b8024d988226df0b529a7566d905f4e67ee3aa31", 1 );
+////            System.out.println(json.toString());
+////        } catch (IOException e) {
+////            e.printStackTrace();
+////        }
+//    }
 
     private static JSONObject getSonarIssueResults(String id, int page) throws IOException {
         URL url = new URL(SEARCH_API_URL + "?componentKeys=" + id + "&additionalFields=_all&s=FILE_LINE&resolved=false&p=" + page);

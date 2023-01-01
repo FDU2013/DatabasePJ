@@ -51,8 +51,8 @@ public class SonarScanner {
         System.out.println(result);;
     }
 
-    public static void main(String[] args) {
-        //test:
-        ScanRepo("C:\\MyMine\\CS_SE\\Projects\\SonarTest", "okoko");
-    }
+//    public static void main(String[] args) {
+//        //test:
+//        ScanRepo("C:\\MyMine\\CS_SE\\Projects\\SonarTest", "okoko");
+//    }
 }

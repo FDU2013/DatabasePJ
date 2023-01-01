@@ -10,10 +10,7 @@ import init.Connect;
 import util.GitUtil;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static common.CommitProperty.*;
 import static common.EnumUtil.SonarString2CaseType;
@@ -37,7 +34,6 @@ public class RepoImport {
         this.gitUtil.initGit(this.path);
     }
 
-
     public void importRepo(String description) {
         Repository repo = new Repository(null, repoName, description, path);
         try {
@@ -48,6 +44,13 @@ public class RepoImport {
     }
     public void importAllBranch(){
         List<String> allBranch = gitUtil.getAllBranch();
+        Scanner s = new Scanner(System.in);
+        System.out.println("请输入sonarQube的账号：");
+        String account = s.nextLine();
+        System.out.println("请输入sonarQube的密码：");
+        String password = s.nextLine();
+        s.close();
+        SonarResultParser.initParser(account, password);
         for(String branch : allBranch) {
             curBranchId = importBranch(branch);
             try {
@@ -88,7 +91,7 @@ public class RepoImport {
             String sonarID = repoName + "_" + branchName + "_" + lastCommit.getHash_val();
             SonarScanner.ScanRepo(path, sonarID);
             SonarResultParser parser = new SonarResultParser();
-            Thread.sleep(5000);
+            Thread.sleep(15000);
             parser.getSonarResult(repoName, branchName, lastCommit.getHash_val());
             preRawIssues = parser.getResultRawIssues();
             for (RawIssue issue : preRawIssues) {
@@ -113,7 +116,7 @@ public class RepoImport {
                 SonarScanner.ScanRepo(path, id);
                 SonarResultParser parser1 = new SonarResultParser();
 
-                Thread.sleep(5000);
+                Thread.sleep(15000);
                 parser1.getSonarResult(repoName, branchName, commit.getHash_val());
                 curRawIssues = parser1.getResultRawIssues();
                 //System.out.println("size" + curRawIssues.size());
